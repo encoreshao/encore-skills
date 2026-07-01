@@ -45,18 +45,26 @@ See `gitlab-config` skill for first-time setup.
 
 ## Before you start
 
-Read project context before touching the codebase:
+Load only what's relevant — don't dump all context into memory.
 
 ```bash
-# Single file (small/medium projects)
+# 1. Discover what exists
+ls docs/CONTEXT.md 2>/dev/null && wc -l docs/CONTEXT.md
+ls docs/context/ 2>/dev/null
+
+# 2a. Single file under 100 lines — load whole file
 cat docs/CONTEXT.md
 
-# Directory (large projects)
+# 2b. Single file over 100 lines — scan headers, then load relevant sections
+grep "^## " docs/CONTEXT.md
+awk '/^## Solved Issues/,/^## /' docs/CONTEXT.md
+
+# 2c. Directory — read index first, then only domain files that match this issue
 cat docs/context/index.md
-cat docs/context/<relevant-domain>.md
+cat docs/context/<relevant-domain>.md   # only the domains that apply
 ```
 
-Check **Solved Issues** for similar past fixes, **Patterns** for established approaches, **Gotchas** for known traps. Skip re-discovering what's already documented — start from what the team already knows.
+Check **Solved Issues** for similar past fixes, **Patterns** for established approaches, **Gotchas** for known traps. If it's already documented, use it — don't re-derive it.
 
 ## Steps
 
@@ -435,7 +443,7 @@ Instance resolution: `--instance` flag → project's configured instance → `de
 
 Every issue fix teaches you something about the codebase. Record it. The next session shouldn't have to rediscover the same root causes, the same patterns, the same traps. `docs/CONTEXT.md` (or `docs/context/` for large projects) is the living knowledge layer — it grows smarter with every resolved issue.
 
-Two modes: **read** before analyzing, **update** after merging.
+Three modes: **discover** what context exists, **load** only what's relevant, **update** after merging.
 
 ## Structure
 

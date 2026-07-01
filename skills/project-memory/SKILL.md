@@ -13,7 +13,7 @@ metadata:
 
 Every issue fix teaches you something about the codebase. Record it. The next session shouldn't have to rediscover the same root causes, the same patterns, the same traps. `docs/CONTEXT.md` (or `docs/context/` for large projects) is the living knowledge layer — it grows smarter with every resolved issue.
 
-Two modes: **read** before analyzing, **update** after merging.
+Three modes: **discover** what context exists, **load** only what's relevant, **update** after merging.
 
 ## Structure
 
@@ -39,24 +39,55 @@ Start with the single file. Split into a directory only when `CONTEXT.md` grows 
 
 ---
 
-## Read mode — before analyze-issue or fix-issue
+## Discover mode — what context exists?
+
+Before reading anything, check what's available. Don't load it all.
 
 ```bash
-# Single file
-cat docs/CONTEXT.md
+# Check if single file exists and how large it is
+ls docs/CONTEXT.md 2>/dev/null && wc -l docs/CONTEXT.md
 
-# Directory
-cat docs/context/index.md
-cat docs/context/<relevant-domain>.md
+# Or list available domain files
+ls docs/context/ 2>/dev/null
 ```
 
-Scan and apply what's already known:
-- **Architecture** — understand the layers before searching
-- **Patterns** — what's the established way to do what you're about to do?
+---
+
+## Load mode — read only what's relevant to this issue
+
+Don't load everything into context. Load the minimum needed.
+
+**Single file — under 100 lines:** load the whole file.
+```bash
+cat docs/CONTEXT.md
+```
+
+**Single file — over 100 lines:** scan headers first, then read targeted sections.
+```bash
+grep "^## " docs/CONTEXT.md          # see what sections exist
+
+# Load only relevant sections
+awk '/^## Solved Issues/,/^## /' docs/CONTEXT.md
+awk '/^## Patterns/,/^## /' docs/CONTEXT.md
+```
+
+**Directory — always lazy-load:**
+```bash
+# Step 1: read index only — always lightweight
+cat docs/context/index.md
+
+# Step 2: from the issue title and description, identify which domains apply
+# Step 3: load only those files
+cat docs/context/auth.md       # only if the issue touches auth
+cat docs/context/payments.md   # only if the issue touches payments
+```
+
+Apply what's already known before scanning the codebase:
 - **Solved Issues** — has something similar been fixed before?
+- **Patterns** — what's the established approach in this area?
 - **Gotchas** — what has surprised people here?
 
-If the relevant pattern or root cause is already documented: use it. Don't re-derive it.
+If the root cause or pattern is already documented: use it. Don't re-derive it.
 
 ---
 

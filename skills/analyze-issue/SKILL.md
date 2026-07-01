@@ -31,18 +31,26 @@ See `gitlab-config` skill for first-time setup.
 
 ## Before you start
 
-Read project context before touching the codebase:
+Load only what's relevant — don't dump all context into memory.
 
 ```bash
-# Single file (small/medium projects)
+# 1. Discover what exists
+ls docs/CONTEXT.md 2>/dev/null && wc -l docs/CONTEXT.md
+ls docs/context/ 2>/dev/null
+
+# 2a. Single file under 100 lines — load whole file
 cat docs/CONTEXT.md
 
-# Directory (large projects)
+# 2b. Single file over 100 lines — scan headers, then load relevant sections
+grep "^## " docs/CONTEXT.md
+awk '/^## Solved Issues/,/^## /' docs/CONTEXT.md
+
+# 2c. Directory — read index first, then only domain files that match this issue
 cat docs/context/index.md
-cat docs/context/<relevant-domain>.md
+cat docs/context/<relevant-domain>.md   # only the domains that apply
 ```
 
-Check **Solved Issues** for similar past fixes, **Patterns** for established approaches, **Gotchas** for known traps. Skip re-discovering what's already documented — start from what the team already knows.
+Check **Solved Issues** for similar past fixes, **Patterns** for established approaches, **Gotchas** for known traps. If it's already documented, use it — don't re-derive it.
 
 ## Steps
 
