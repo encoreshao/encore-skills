@@ -18,8 +18,8 @@ Full development loop. The goal is not to merge an MR — it's to confirm the pr
 ```
 write-issue → analyze-issue → fix-issue → review-code → create-mr → [merge] → project-memory
       ↑            ↑ reads                                                           |
-      │         CODEBASE.md                                                          ↓
-      └──────── new issue from feedback ──────────────────────────── CODEBASE.md grows smarter
+      │       docs/CONTEXT.md                                                        ↓
+      └──────── new issue from feedback ─────────────────────── docs/CONTEXT.md grows smarter
 ```
 
 ## Entry points
@@ -96,9 +96,10 @@ If post-merge verification reveals the fix didn't work: reopen the issue, note w
 Use `project-memory`. Record what you learned: root cause, fix approach, key files, any gotchas. Takes 5 minutes. Makes the next analysis start from knowledge instead of a blank scan.
 
 ```bash
-# Append to CODEBASE.md in the project repo, then commit
-git add CODEBASE.md
-git commit -m "chore: update project memory after resolving #<N>"
+# Edit docs/CONTEXT.md (or docs/context/<domain>.md) in the project repo
+# Always update in place — keep it current, not append-only
+git add docs/CONTEXT.md        # or docs/context/
+git commit -m "chore: update project context after resolving #<N>"
 ```
 
 **Gate:** CODEBASE.md updated and committed. The loop is now smarter than when it started.

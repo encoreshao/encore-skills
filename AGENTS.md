@@ -11,7 +11,7 @@ Invoke a skill by name when the task matches its description.
 | `create-mr` | — | Create a GitLab Merge Request — clear title, high-level summary of what was changed and why, explicit confirmation the issue is resolved |
 | `fix-issue` | — | Implement a fix following the human-thinking loop — understand the root cause, plan the minimal change, implement, verify the problem is actually gone |
 | `gitlab-config` | — | Wire up GitLab API access — multiple instances, project aliases, tokens. Run this once before any other GitLab skill. |
-| `project-memory` | — | Record what was learned fixing an issue into CODEBASE.md — so the next analysis starts from knowledge, not a blank scan |
+| `project-memory` | — | Record what was learned fixing an issue into docs/CONTEXT.md — so the next analysis starts from knowledge, not a blank scan |
 | `review-code` | — | Pre-MR self-review — first confirm the problem is actually solved, then check for security, correctness, and simplicity |
 | `workflow` | — | Full GitLab development loop — from issue to confirmed-resolved. Covers write-issue, analyze-issue, fix-issue, review-code, create-mr, and post-merge verification. |
 | `write-issue` | — | Turn a rough idea into a well-structured GitLab issue with clear problem statement, root cause, and testable acceptance criteria |
@@ -45,13 +45,18 @@ See `gitlab-config` skill for first-time setup.
 
 ## Before you start
 
-If `CODEBASE.md` exists at the project root, read it first:
+Read project context before touching the codebase:
 
 ```bash
-cat CODEBASE.md
+# Single file (small/medium projects)
+cat docs/CONTEXT.md
+
+# Directory (large projects)
+cat docs/context/index.md
+cat docs/context/<relevant-domain>.md
 ```
 
-Check **Solved Issues** for similar past fixes, **Patterns** for established approaches, **Gotchas** for known traps. Skip re-discovering what's already there — start from what the team already knows.
+Check **Solved Issues** for similar past fixes, **Patterns** for established approaches, **Gotchas** for known traps. Skip re-discovering what's already documented — start from what the team already knows.
 
 ## Steps
 
@@ -251,7 +256,7 @@ git checkout -b fix/<issue-number>-<short-description>
 
 Read the relevant code before writing a single line. You cannot fix what you don't understand.
 
-- Check `CODEBASE.md` first (if it exists) — scan Solved Issues for similar past fixes and Patterns for established approaches before searching the codebase from scratch
+- Check `docs/CONTEXT.md` (or `docs/context/<domain>.md` for large projects) first — scan Solved Issues for similar past fixes and Patterns for established approaches before searching the codebase from scratch
 - Find the code involved: `grep`, file search, follow the call chain
 - Understand why the current behavior happens — confirm the root cause from the analysis
 - If the root cause turns out to be different from the analysis, stop and update the analysis
@@ -423,100 +428,36 @@ Instance resolution: `--instance` flag → project's configured instance → `de
 
 ## Skill: `project-memory`
 
-> Record what was learned fixing an issue into CODEBASE.md — so the next analysis starts from knowledge, not a blank scan
+> Record what was learned fixing an issue into docs/CONTEXT.md — so the next analysis starts from knowledge, not a blank scan
 
 
 # Project Memory
 
-Every issue fix teaches you something about the codebase. Record it. The next session shouldn't have to rediscover the same root causes, the same patterns, the same traps. This is the knowledge layer that makes the loop smarter with every cycle.
+Every issue fix teaches you something about the codebase. Record it. The next session shouldn't have to rediscover the same root causes, the same patterns, the same traps. `docs/CONTEXT.md` (or `docs/context/` for large projects) is the living knowledge layer — it grows smarter with every resolved issue.
 
 Two modes: **read** before analyzing, **update** after merging.
 
-## Read mode — before analyze-issue or fix-issue
+## Structure
 
-If `CODEBASE.md` exists at the project root, read it before touching the codebase:
+**Small to medium projects** — single file:
 
-```bash
-cat CODEBASE.md
+```
+docs/CONTEXT.md
 ```
 
-Scan these sections and apply what's already known:
-- **Architecture** — understand the layers before searching
-- **Patterns** — what's the established way to do what you're about to do?
-- **Solved Issues** — has something similar been fixed before?
-- **Gotchas** — what has surprised people here?
+**Large projects** — split by domain into a directory:
 
-If the relevant pattern or root cause is already documented: use it. Don't re-derive it.
-
-## Update mode — after merge
-
-Run this after the MR is merged and post-merge verification passes. Takes 5 minutes. Saves hours next cycle.
-
-### 1. Create CODEBASE.md if it doesn't exist
-
-```bash
-cat > CODEBASE.md <<'EOF'
-# Project Knowledge Base
-
-## Architecture
-
-## Patterns
-
-## Hotspots
-
-## Solved Issues
-
-| Issue | Root Cause | Fix Approach | Key Files |
-|-------|-----------|--------------|-----------|
-
-## Gotchas
-EOF
-
-git add CODEBASE.md
+```
+docs/context/
+  index.md        ← overview + quick-reference table across all domains
+  auth.md
+  payments.md
+  api.md
+  background-jobs.md
+  <domain>.md     ← one file per major area of the codebase
 ```
 
-### 2. Append what you learned from this fix
-
-```markdown
-## Architecture
-- <Layer / component> — <what it does and where it lives>
-
-## Patterns
-- <Pattern name> — <what it is, where to find a canonical example>
-
-## Hotspots
-- `path/to/file` — <why it changes frequently, what to watch out for>
-
-## Solved Issues
-
-| Issue | Root Cause | Fix Approach | Key Files |
-|-------|-----------|--------------|-----------|
-| #<N> <title> | <one line: specific cause> | <one line: what changed> | `file1`, `file2` |
-
-## Gotchas
-- <What surprised you at the start> — <why it happens / how to avoid>
-```
-
-Write the Solved Issues row precisely:
-- **Root cause**: specific. "Email comparison is case-sensitive at the DB query layer" — not "login bug"
-- **Fix approach**: what changed. "Normalize email to lowercase before query" — not "edited user.rb"
-- **Key files**: 1–3 files that were the actual locus of the change
-
-Only add a Gotcha if it would have surprised you at the start of the investigation. If it was obvious from reading the code, skip it.
-
-### 3. Commit
-
-```bash
-git add CODEBASE.md
-git commit -m "chore: update project memory after resolving #<N>"
-```
-
-## What NOT to record
-
-- Things readable from the code itself (don't duplicate what's already clear from naming or comments)
-- Full implementation detail — keep it to one line; the MR has the code
-- Anything already covered in the README or official docs
-- Temporary state — only durable knowledge that will still be true in 6 months
+Start with the single file. Split into a directory only when `CONTEXT.md` grows past ~150 lines or covers more than 4–5 clearly separate domains.
 
 ---
 
@@ -633,8 +574,8 @@ Full development loop. The goal is not to merge an MR — it's to confirm the pr
 ```
 write-issue → analyze-issue → fix-issue → review-code → create-mr → [merge] → project-memory
       ↑            ↑ reads                                                           |
-      │         CODEBASE.md                                                          ↓
-      └──────── new issue from feedback ──────────────────────────── CODEBASE.md grows smarter
+      │       docs/CONTEXT.md                                                        ↓
+      └──────── new issue from feedback ─────────────────────── docs/CONTEXT.md grows smarter
 ```
 
 ## Entry points

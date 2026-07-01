@@ -19,7 +19,7 @@ A portable workflow skills library for GitLab-focused development teams. Install
 | [`review-code`](skills/review-code/SKILL.md) | Dev / Lead | Pre-MR self-review — problem solved first, then security, correctness, quality |
 | [`create-mr`](skills/create-mr/SKILL.md) | Dev | Create a GitLab MR with a high-level summary that tells the reviewer what matters |
 | [`workflow`](skills/workflow/SKILL.md) | All | Full loop: write-issue → analyze → fix → review → MR → post-merge verify |
-| [`project-memory`](skills/project-memory/SKILL.md) | All | Record what was learned into `CODEBASE.md` so the next fix starts from knowledge, not a blank scan |
+| [`project-memory`](skills/project-memory/SKILL.md) | All | Record what was learned into `docs/CONTEXT.md` so the next fix starts from knowledge, not a blank scan. Supports per-domain files for large projects. |
 
 ---
 
@@ -70,8 +70,8 @@ See [`skills/gitlab-config/SKILL.md`](skills/gitlab-config/SKILL.md) for full se
 ```
 write-issue → analyze-issue → fix-issue → review-code → create-mr → [merge] → project-memory
       ↑            ↑ reads                                                            |
-      │         CODEBASE.md                                                           ↓
-      └──────── feedback / new issue ─────────────────────────── CODEBASE.md grows smarter
+      │      docs/CONTEXT.md                                                          ↓
+      └──────── feedback / new issue ──────────────────── docs/CONTEXT.md grows smarter
 ```
 
 Each phase follows human thinking:

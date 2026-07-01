@@ -31,13 +31,18 @@ See `gitlab-config` skill for first-time setup.
 
 ## Before you start
 
-If `CODEBASE.md` exists at the project root, read it first:
+Read project context before touching the codebase:
 
 ```bash
-cat CODEBASE.md
+# Single file (small/medium projects)
+cat docs/CONTEXT.md
+
+# Directory (large projects)
+cat docs/context/index.md
+cat docs/context/<relevant-domain>.md
 ```
 
-Check **Solved Issues** for similar past fixes, **Patterns** for established approaches, **Gotchas** for known traps. Skip re-discovering what's already there — start from what the team already knows.
+Check **Solved Issues** for similar past fixes, **Patterns** for established approaches, **Gotchas** for known traps. Skip re-discovering what's already documented — start from what the team already knows.
 
 ## Steps
 
