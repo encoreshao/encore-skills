@@ -1,0 +1,24 @@
+name: Validate skills
+
+on:
+  pull_request:
+    paths:
+      - "skills/**"
+      - ".github/scripts/validate-skills.sh"
+  push:
+    branches:
+      - main
+    paths:
+      - "skills/**"
+
+jobs:
+  validate:
+    name: Frontmatter validation
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Run skill validator
+        run: |
+          chmod +x .github/scripts/validate-skills.sh
+          .github/scripts/validate-skills.sh
