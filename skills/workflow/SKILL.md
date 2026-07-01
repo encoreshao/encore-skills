@@ -5,8 +5,8 @@ license: MIT
 compatibility: git required. glab CLI optional. GitLab project access required.
 metadata:
   author: encoreshao
-  version: "1.2"
-  tags: gitlab workflow engineer pm orchestrator full-loop
+  version: "1.3"
+  tags: gitlab workflow engineer pm orchestrator full-loop branch
 ---
 
 # Workflow
@@ -52,7 +52,7 @@ Use `analyze-issue`. The goal is to understand the **root cause** — not just r
 
 ### Phase 2: Fix Issue
 
-Use `fix-issue`. Read the existing code before touching it. Fix the root cause, not the symptom. Verify the problem is gone before moving on.
+Use `fix-issue`. If you're on a protected branch (`main`/`master`/`develop`/`staging`), it creates `<type>/<issue-number>-<func-name>` and records the branch you came from as the MR base. Read the existing code before touching it. Fix the root cause, not the symptom. Verify the problem is gone before moving on.
 
 **Gate:** All acceptance criteria met. Problem confirmed gone — not just tests green.
 
@@ -68,9 +68,9 @@ Use `review-code`. Start by asking: does this actually solve the problem from th
 
 ### Phase 4: Create MR
 
-Use `create-mr`. Write a description that tells reviewers what problem was solved and whether it's fixed — in plain language, not a file list.
+Use `create-mr`. It targets the branch you branched from (recorded in Phase 2), not always `main`. Write a description that tells reviewers what problem was solved and whether it's fixed — in plain language, not a file list.
 
-**Gate:** MR is open, CI is passing, description links to the issue.
+**Gate:** MR is open, targets the right base branch, CI is passing, description links to the issue.
 
 ---
 

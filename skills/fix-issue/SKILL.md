@@ -5,8 +5,8 @@ license: MIT
 compatibility: git required. Project test runner expected (any language).
 metadata:
   author: encoreshao
-  version: "1.2"
-  tags: gitlab engineer implementation fix tdd root-cause workflow
+  version: "1.3"
+  tags: gitlab engineer implementation fix tdd root-cause workflow branch
 ---
 
 # Fix Issue
@@ -15,16 +15,32 @@ Implements a fix following how a senior engineer actually thinks: understand fir
 
 ## Input
 - Analysis from `analyze-issue`, or the issue itself
-- A feature branch (not `main`/`master`)
+- A feature branch (not `main`/`master`/`develop`/`staging`)
+
+### Branch check
+
+Before touching any code, check the current branch:
 
 ```bash
-# Preferred — creates branch named issue-<iid>-<title> automatically
+git branch --show-current
+```
+
+If it's a protected branch (`main`, `master`, `develop`, `staging`), create a new one off it, named `<type>/<issue-number>-<func-name>` — `<type>` matches the commit convention below (`feat`, `fix`, `refactor`, `test`, `chore`, `docs`).
+
+```bash
+# Preferred — creates the branch and records the current branch as its base,
+# so create-mr can later target the MR back to the right branch
 RESOLVE="$HOME/.claude/skills/gitlab-config/scripts/auto_resolve_issue.py"
-python $RESOLVE create-branch <issue_iid> "<issue title>"
+python $RESOLVE create-branch <issue_iid> "<func name>" <type>
+# e.g. python $RESOLVE create-branch 123 "add login" feat  ->  feat/123-add-login
 
 # Fallback (manual)
-git checkout -b fix/<issue-number>-<short-description>
+BASE=$(git branch --show-current)
+git checkout -b <type>/<issue-number>-<func-name>
+git config --local branch.<type>/<issue-number>-<func-name>.base "$BASE"
 ```
+
+Already on a non-protected feature branch? Keep working on it — don't create a nested branch.
 
 ## The loop
 

@@ -5,8 +5,8 @@ license: MIT
 compatibility: git required. glab CLI optional. GitLab project access required.
 metadata:
   author: encoreshao
-  version: "1.1"
-  tags: gitlab mr merge-request engineer workflow ship
+  version: "1.2"
+  tags: gitlab mr merge-request engineer workflow ship branch
 ---
 
 # Create MR
@@ -15,9 +15,15 @@ Use after `review-code` passes. A good MR description tells the reviewer what pr
 
 ## Pre-flight
 
+The MR must target the branch you actually branched from — not always `main`. If `fix-issue` created your branch, that base branch was recorded automatically; resolve it before diffing or opening the MR.
+
 ```bash
+RESOLVE="$HOME/.claude/skills/gitlab-config/scripts/auto_resolve_issue.py"
+BRANCH=$(git branch --show-current)
+BASE=$(git config --local --get branch.$BRANCH.base || echo main)
+
 git fetch origin
-git log origin/main..HEAD --oneline        # confirm what's going in
+git log origin/$BASE..HEAD --oneline       # confirm what's going in
 glab pipeline status 2>/dev/null || true   # check CI
 ```
 
@@ -63,21 +69,23 @@ The `Closes #<number>` line goes at the top of the description so GitLab auto-li
 
 ```bash
 # Preferred — API script (supports multiple GitLab servers)
+# target "auto" resolves to the branch you branched from, falling back to main
 RESOLVE="$HOME/.claude/skills/gitlab-config/scripts/auto_resolve_issue.py"
 git push -u origin HEAD
-python $RESOLVE create-mr <project> <branch> main \
+python $RESOLVE create-mr <project> <branch> auto \
   "fix: <what was fixed>" \
   "Closes #<issue-number>
 
 <2-3 sentence summary>" \
   <issue_iid>
-# e.g. python $RESOLVE create-mr webapp issue-42-fix-login main \
+# e.g. python $RESOLVE create-mr webapp feat/42-fix-login auto \
 #   "fix: users with uppercase emails can now log in" \
 #   "Closes #42\n\nNormalizes email input before DB lookup." 42
 
 # With glab (single instance)
 glab mr create \
   --title "fix: <what was fixed>" \
+  --target-branch "$BASE" \
   --fill \
   --assignee @me \
   --remove-source-branch

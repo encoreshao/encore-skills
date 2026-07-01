@@ -38,18 +38,33 @@ def run_command(cmd: list, capture=True) -> str:
         sys.exit(1)
 
 
-def create_branch_from_issue(issue_iid: int, issue_title: str) -> str:
-    """Create a git branch based on issue number."""
-    # Sanitize title for branch name
+def create_branch_from_issue(issue_iid: int, issue_title: str, branch_type: str) -> Dict[str, str]:
+    """Create a git branch named <type>/<issue_iid>-<title>, recording the
+    current branch as its base so create-mr can target the MR back to it."""
     sanitized_title = issue_title.lower()
     sanitized_title = ''.join(c if c.isalnum() or c in (' ', '-') else '' for c in sanitized_title)
     sanitized_title = '-'.join(sanitized_title.split())[:50]
 
-    branch_name = f"issue-{issue_iid}-{sanitized_title}"
+    branch_name = f"{branch_type}/{issue_iid}-{sanitized_title}"
+    base_branch = run_command(['git', 'rev-parse', '--abbrev-ref', 'HEAD'])
 
-    # Create and checkout branch
     run_command(['git', 'checkout', '-b', branch_name])
-    return branch_name
+    run_command(['git', 'config', '--local', f'branch.{branch_name}.base', base_branch])
+
+    return {'branch_name': branch_name, 'base_branch': base_branch}
+
+
+def get_branch_base(branch_name: str) -> str:
+    """Read the base branch recorded for branch_name, falling back to main."""
+    try:
+        result = subprocess.run(
+            ['git', 'config', '--local', '--get', f'branch.{branch_name}.base'],
+            capture_output=True, text=True, check=True
+        )
+        base = result.stdout.strip()
+        return base if base else 'main'
+    except subprocess.CalledProcessError:
+        return 'main'
 
 
 def push_branch(branch_name: str) -> None:
@@ -96,9 +111,10 @@ def main():
     if len(sys.argv) < 2:
         print("Usage: auto_resolve_issue.py [--instance=<name>] <command> [args...]", file=sys.stderr)
         print("\nCommands:", file=sys.stderr)
-        print("  create-branch <issue_iid> <issue_title>", file=sys.stderr)
+        print("  create-branch <issue_iid> <issue_title> <type>   (type: feat|fix|refactor|test|chore|docs)", file=sys.stderr)
         print("  push-branch <branch_name>", file=sys.stderr)
-        print("  create-mr <project> <source_branch> <target_branch> <title> <description> <issue_iid>", file=sys.stderr)
+        print("  create-mr <project> <source_branch> <target_branch|auto> <title> <description> <issue_iid>", file=sys.stderr)
+        print("    'auto' resolves target_branch to the base branch recorded by create-branch (falls back to main)", file=sys.stderr)
         print("\nOptions:", file=sys.stderr)
         print("  --instance=<name>  Specify which GitLab instance to use (from config file)", file=sys.stderr)
         print("\nNote: <project> can be a project alias (from config) or full project ID", file=sys.stderr)
@@ -120,8 +136,9 @@ def main():
         if command == 'create-branch':
             issue_iid = int(args[1])
             issue_title = args[2]
-            branch_name = create_branch_from_issue(issue_iid, issue_title)
-            print(json.dumps({'branch_name': branch_name}))
+            branch_type = args[3]
+            result = create_branch_from_issue(issue_iid, issue_title, branch_type)
+            print(json.dumps(result))
 
         elif command == 'push-branch':
             branch_name = args[1]
@@ -138,6 +155,8 @@ def main():
 
             source_branch = args[2]
             target_branch = args[3]
+            if target_branch == 'auto':
+                target_branch = get_branch_base(source_branch)
             title = args[4]
             description = args[5]
             issue_iid = int(args[6])

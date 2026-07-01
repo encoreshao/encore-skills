@@ -150,9 +150,15 @@ Use after `review-code` passes. A good MR description tells the reviewer what pr
 
 ## Pre-flight
 
+The MR must target the branch you actually branched from — not always `main`. If `fix-issue` created your branch, that base branch was recorded automatically; resolve it before diffing or opening the MR.
+
 ```bash
+RESOLVE="$HOME/.claude/skills/gitlab-config/scripts/auto_resolve_issue.py"
+BRANCH=$(git branch --show-current)
+BASE=$(git config --local --get branch.$BRANCH.base || echo main)
+
 git fetch origin
-git log origin/main..HEAD --oneline        # confirm what's going in
+git log origin/$BASE..HEAD --oneline       # confirm what's going in
 glab pipeline status 2>/dev/null || true   # check CI
 ```
 
@@ -198,21 +204,23 @@ The `Closes #<number>` line goes at the top of the description so GitLab auto-li
 
 ```bash
 # Preferred — API script (supports multiple GitLab servers)
+# target "auto" resolves to the branch you branched from, falling back to main
 RESOLVE="$HOME/.claude/skills/gitlab-config/scripts/auto_resolve_issue.py"
 git push -u origin HEAD
-python $RESOLVE create-mr <project> <branch> main \
+python $RESOLVE create-mr <project> <branch> auto \
   "fix: <what was fixed>" \
   "Closes #<issue-number>
 
 <2-3 sentence summary>" \
   <issue_iid>
-# e.g. python $RESOLVE create-mr webapp issue-42-fix-login main \
+# e.g. python $RESOLVE create-mr webapp feat/42-fix-login auto \
 #   "fix: users with uppercase emails can now log in" \
 #   "Closes #42\n\nNormalizes email input before DB lookup." 42
 
 # With glab (single instance)
 glab mr create \
   --title "fix: <what was fixed>" \
+  --target-branch "$BASE" \
   --fill \
   --assignee @me \
   --remove-source-branch
@@ -248,16 +256,32 @@ Implements a fix following how a senior engineer actually thinks: understand fir
 
 ## Input
 - Analysis from `analyze-issue`, or the issue itself
-- A feature branch (not `main`/`master`)
+- A feature branch (not `main`/`master`/`develop`/`staging`)
+
+### Branch check
+
+Before touching any code, check the current branch:
 
 ```bash
-# Preferred — creates branch named issue-<iid>-<title> automatically
+git branch --show-current
+```
+
+If it's a protected branch (`main`, `master`, `develop`, `staging`), create a new one off it, named `<type>/<issue-number>-<func-name>` — `<type>` matches the commit convention below (`feat`, `fix`, `refactor`, `test`, `chore`, `docs`).
+
+```bash
+# Preferred — creates the branch and records the current branch as its base,
+# so create-mr can later target the MR back to the right branch
 RESOLVE="$HOME/.claude/skills/gitlab-config/scripts/auto_resolve_issue.py"
-python $RESOLVE create-branch <issue_iid> "<issue title>"
+python $RESOLVE create-branch <issue_iid> "<func name>" <type>
+# e.g. python $RESOLVE create-branch 123 "add login" feat  ->  feat/123-add-login
 
 # Fallback (manual)
-git checkout -b fix/<issue-number>-<short-description>
+BASE=$(git branch --show-current)
+git checkout -b <type>/<issue-number>-<func-name>
+git config --local branch.<type>/<issue-number>-<func-name>.base "$BASE"
 ```
+
+Already on a non-protected feature branch? Keep working on it — don't create a nested branch.
 
 ## The loop
 
