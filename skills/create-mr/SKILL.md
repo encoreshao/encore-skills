@@ -4,7 +4,7 @@ description: Create a GitLab Merge Request — clear title, high-level summary o
 license: MIT
 compatibility: git required. glab CLI optional. GitLab project access required.
 metadata:
-  author: encore
+  author: encoreshao
   version: "1.1"
   tags: gitlab mr merge-request dev workflow ship
 ---

@@ -4,7 +4,7 @@ description: Pre-MR self-review — first confirm the problem is actually solved
 license: MIT
 compatibility: git required. glab CLI optional.
 metadata:
-  author: encore
+  author: encoreshao
   version: "1.1"
   tags: gitlab review security code-quality dev workflow pre-mr
 ---

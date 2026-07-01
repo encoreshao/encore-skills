@@ -4,7 +4,7 @@ description: Full GitLab development loop — from issue to confirmed-resolved. 
 license: MIT
 compatibility: git required. glab CLI optional. GitLab project access required.
 metadata:
-  author: encore
+  author: encoreshao
   version: "1.1"
   tags: gitlab workflow dev pm orchestrator full-loop
 ---

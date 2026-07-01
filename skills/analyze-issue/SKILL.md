@@ -4,7 +4,7 @@ description: Read a GitLab issue, identify the root cause (not just symptoms), s
 license: MIT
 compatibility: GitLab project access required. glab CLI optional. git required.
 metadata:
-  author: encore
+  author: encoreshao
   version: "1.1"
   tags: gitlab issues analysis planning dev pm root-cause
 ---

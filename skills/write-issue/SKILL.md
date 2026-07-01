@@ -4,7 +4,7 @@ description: Turn a rough idea into a well-structured GitLab issue with clear pr
 license: MIT
 compatibility: GitLab project access required. glab CLI optional but recommended.
 metadata:
-  author: encore
+  author: encoreshao
   version: "1.1"
   tags: gitlab issues pm workflow write planning
 ---

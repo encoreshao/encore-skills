@@ -4,7 +4,7 @@ description: Implement a fix following the human-thinking loop — understand th
 license: MIT
 compatibility: git required. Project test runner expected (any language).
 metadata:
-  author: encore
+  author: encoreshao
   version: "1.1"
   tags: gitlab dev implementation fix tdd root-cause workflow
 ---
