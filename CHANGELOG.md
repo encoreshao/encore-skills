@@ -6,6 +6,14 @@ Versioning follows [Semantic Versioning](https://semver.org/).
 
 ## [Unreleased]
 
+### Added
+- `triage-issue` skill — reads an issue's comment thread, decides which comments actually need your reply (tags you, or you're the assignee with an unanswered question), grounds the reply in the current codebase, and posts directly when it's clearly warranted or checks with you first when it's ambiguous.
+- `whoami` command to `gitlab_api.py` — fetches the authenticated GitLab user, used by `triage-issue` to detect self-mentions.
+
+### Changed
+- Renamed `workflow` skill to `eng-workflow` for clarity now that `pm-workflow` and `triage-issue` exist alongside it.
+- `fix-issue` now checks the current branch and cuts a new one off `main`/`master`/`develop`/`staging`, named `<type>/<issue-number>-<func-name>`, recording the originating branch so `create-mr` can target the MR back to it instead of always assuming `main`.
+
 ## [1.3.0] - 2026-07-01
 
 ### Added

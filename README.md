@@ -1,7 +1,7 @@
 # encore-skills
 
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
-[![Skills](https://img.shields.io/badge/skills-9-blue)](#skills)
+[![Skills](https://img.shields.io/badge/skills-10-blue)](#skills)
 [![Works with](https://img.shields.io/badge/works%20with-Claude%20%7C%20Cursor%20%7C%20Codex-green)](#install)
 
 A portable workflow skills library for GitLab teams. Works across Claude Code, Cursor, and Codex. Covers two full loops: one for PMs and designers, one for engineers — from rough idea to confirmed-resolved issue.
@@ -27,11 +27,12 @@ A portable workflow skills library for GitLab teams. Works across Claude Code, C
 
 | Skill | What it does |
 |-------|--------------|
-| [`workflow`](skills/workflow/SKILL.md) | Full engineer loop orchestrator — analyze → fix → review → MR → post-merge verify → update memory. |
+| [`eng-workflow`](skills/eng-workflow/SKILL.md) | Full engineer loop orchestrator — analyze → fix → review → MR → post-merge verify → update memory. |
 | [`analyze-issue`](skills/analyze-issue/SKILL.md) | Read an issue, identify the root cause (not just symptoms), surface real risks, produce an implementation approach. |
 | [`fix-issue`](skills/fix-issue/SKILL.md) | Implement following the human-thinking loop — understand, plan, code, verify the problem is actually gone. |
 | [`review-code`](skills/review-code/SKILL.md) | Pre-MR self-review — problem solved first, then security, correctness, and code quality. |
 | [`create-mr`](skills/create-mr/SKILL.md) | Create a GitLab MR with a high-level summary that tells the reviewer what matters in 30 seconds. |
+| [`triage-issue`](skills/triage-issue/SKILL.md) | Check an issue's comments for ones that need your reply, ground the reply in the actual codebase, post when it's clearly warranted. |
 | [`project-memory`](skills/project-memory/SKILL.md) | Record root cause, fix approach, and gotchas into `docs/CONTEXT.md` — so the next fix starts from knowledge, not a blank scan. |
 
 ---
@@ -185,7 +186,7 @@ analyze-issue → fix-issue → review-code → create-mr → [merge] → projec
 
 Each cycle follows the same thinking: **Understand → Plan → Implement → Validate → Ship or loop.**
 
-The `workflow` skill runs the full engineer loop as a single guided session.
+The `eng-workflow` skill runs the full engineer loop as a single guided session.
 
 ---
 

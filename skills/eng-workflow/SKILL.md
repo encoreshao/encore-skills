@@ -1,15 +1,15 @@
 ---
-name: workflow
-description: Full GitLab development loop — from issue to confirmed-resolved. Covers write-issue, analyze-issue, fix-issue, review-code, create-mr, and post-merge verification.
+name: eng-workflow
+description: Full GitLab development loop — from issue to confirmed-resolved. Covers write-issue, analyze-issue, fix-issue, review-code, create-mr, triage-issue, and post-merge verification.
 license: MIT
 compatibility: git required. glab CLI optional. GitLab project access required.
 metadata:
   author: encoreshao
-  version: "1.3"
+  version: "1.4"
   tags: gitlab workflow engineer pm orchestrator full-loop branch
 ---
 
-# Workflow
+# Engineer Workflow
 
 Full development loop. The goal is not to merge an MR — it's to confirm the problem is actually gone.
 
@@ -30,6 +30,7 @@ write-issue → analyze-issue → fix-issue → review-code → create-mr → [m
 | Have a GitLab issue | `analyze-issue` |
 | Have an analysis, ready to code | `fix-issue` |
 | Code done, ready to ship | `review-code` |
+| Issue has comments that may need your reply | `triage-issue` |
 
 ## Phase guide
 

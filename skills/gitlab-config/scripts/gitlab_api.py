@@ -248,6 +248,10 @@ class GitLabAPI:
             print(f"Error: {e}", file=sys.stderr)
             sys.exit(1)
 
+    def get_current_user(self) -> Dict:
+        """Get the authenticated user for this token."""
+        return self._request('GET', 'user')
+
     def get_project(self, project_id: str) -> Dict:
         """Get project details."""
         return self._request('GET', f"projects/{requests.utils.quote(project_id, safe='')}")
@@ -346,6 +350,7 @@ def main():
         print("\nCommands:", file=sys.stderr)
         print("  list-instances                                   - List configured GitLab instances", file=sys.stderr)
         print("  list-projects                                    - List configured project aliases", file=sys.stderr)
+        print("  whoami                                           - Show the authenticated GitLab user", file=sys.stderr)
         print("  get-issue <project> <issue_iid>                 - Fetch issue with comments", file=sys.stderr)
         print("  list-issues <project> [state] [labels...]       - List issues with filters", file=sys.stderr)
         print("  get-mr <project> <mr_iid>                       - Fetch merge request with changes", file=sys.stderr)
@@ -394,7 +399,10 @@ def main():
     api = GitLabAPI(instance_name)
 
     try:
-        if command == 'get-issue':
+        if command == 'whoami':
+            result = api.get_current_user()
+
+        elif command == 'get-issue':
             project_id, issue_iid = args[1], int(args[2])
             result = api.get_issue(project_id, issue_iid)
 

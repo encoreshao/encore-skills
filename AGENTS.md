@@ -9,12 +9,13 @@ Invoke a skill by name when the task matches its description.
 |-------|------|-------------|
 | `analyze-issue` | — | Read a GitLab issue, identify the root cause (not just symptoms), surface real risks, and produce an implementation approach before writing any code |
 | `create-mr` | — | Create a GitLab Merge Request — clear title, high-level summary of what was changed and why, explicit confirmation the issue is resolved |
+| `eng-workflow` | — | Full GitLab development loop — from issue to confirmed-resolved. Covers write-issue, analyze-issue, fix-issue, review-code, create-mr, triage-issue, and post-merge verification. |
 | `fix-issue` | — | Implement a fix following the human-thinking loop — understand the root cause, plan the minimal change, implement, verify the problem is actually gone |
 | `gitlab-config` | — | Wire up GitLab API access — multiple instances, project aliases, tokens. Run this once before any other GitLab skill. |
 | `pm-workflow` | — | Full PM/designer loop — draft an issue, interact with users and stakeholders to validate it, refine until dev-ready, then finalize |
 | `project-memory` | — | Record what was learned fixing an issue into docs/CONTEXT.md — so the next analysis starts from knowledge, not a blank scan |
 | `review-code` | — | Pre-MR self-review — first confirm the problem is actually solved, then check for security, correctness, and simplicity |
-| `workflow` | — | Full GitLab development loop — from issue to confirmed-resolved. Covers write-issue, analyze-issue, fix-issue, review-code, create-mr, and post-merge verification. |
+| `triage-issue` | — | Use when a GitLab issue has comments that might tag you or be waiting on your reply as assignee, and you need to decide what actually needs a response |
 | `write-issue` | — | Turn a rough idea into a well-structured GitLab issue with clear problem statement, root cause, and testable acceptance criteria |
 
 ---
@@ -242,6 +243,45 @@ python $GITLAB post-issue-comment <project> <issue_iid> "Fixed in !<mr-number>: 
 # Via glab
 glab issue note <number> --message "Fixed in !<mr-number>. MR: <url>"
 ```
+
+---
+
+## Skill: `eng-workflow`
+
+> Full GitLab development loop — from issue to confirmed-resolved. Covers write-issue, analyze-issue, fix-issue, review-code, create-mr, triage-issue, and post-merge verification.
+
+
+# Engineer Workflow
+
+Full development loop. The goal is not to merge an MR — it's to confirm the problem is actually gone.
+
+## The loop
+
+```
+write-issue → analyze-issue → fix-issue → review-code → create-mr → [merge] → project-memory
+      ↑            ↑ reads                                                           |
+      │       docs/CONTEXT.md                                                        ↓
+      └──────── new issue from feedback ─────────────────────── docs/CONTEXT.md grows smarter
+```
+
+## Entry points
+
+| Where you are | Start here |
+|---------------|------------|
+| Have a rough idea or bug report | `write-issue` |
+| Have a GitLab issue | `analyze-issue` |
+| Have an analysis, ready to code | `fix-issue` |
+| Code done, ready to ship | `review-code` |
+| Issue has comments that may need your reply | `triage-issue` |
+
+## Phase guide
+
+### Phase 0: Write Issue
+*Skip if issue already exists in GitLab.*
+
+Use `write-issue`. Focus on the root cause, not just the symptom. Define what "fixed" looks like before any code is written.
+
+**Gate:** Issue has a clear problem statement and testable acceptance criteria.
 
 ---
 
@@ -621,41 +661,67 @@ If verdict is "Needs changes" → back to `fix-issue`. Fix, don't rationalize.
 
 ---
 
-## Skill: `workflow`
+## Skill: `triage-issue`
 
-> Full GitLab development loop — from issue to confirmed-resolved. Covers write-issue, analyze-issue, fix-issue, review-code, create-mr, and post-merge verification.
+> Use when a GitLab issue has comments that might tag you or be waiting on your reply as assignee, and you need to decide what actually needs a response
 
 
-# Workflow
+# Triage Issue
 
-Full development loop. The goal is not to merge an MR — it's to confirm the problem is actually gone.
+Reads an issue and its comment thread, figures out which comments genuinely need a reply from you, grounds the reply in the actual codebase (not guesswork), and replies — directly when it's clearly warranted, or after checking with you when it's not.
 
-## The loop
+## Input
+- Issue number (`#42`) with project alias or path, or a GitLab URL
+- A local clone of the relevant repo, if you want the reply grounded in current code (optional — skip Step 3 if there's no codebase)
 
+```bash
+GITLAB="$HOME/.claude/skills/gitlab-config/scripts/gitlab_api.py"
+python $GITLAB whoami                            # confirm your username once per session
+python $GITLAB get-issue <project> <number>       # issue + full comment thread
 ```
-write-issue → analyze-issue → fix-issue → review-code → create-mr → [merge] → project-memory
-      ↑            ↑ reads                                                           |
-      │       docs/CONTEXT.md                                                        ↓
-      └──────── new issue from feedback ─────────────────────── docs/CONTEXT.md grows smarter
-```
 
-## Entry points
+See `gitlab-config` skill for first-time setup.
 
-| Where you are | Start here |
-|---------------|------------|
-| Have a rough idea or bug report | `write-issue` |
-| Have a GitLab issue | `analyze-issue` |
-| Have an analysis, ready to code | `fix-issue` |
-| Code done, ready to ship | `review-code` |
+## Steps
 
-## Phase guide
+### 1. Fetch the issue and comments
 
-### Phase 0: Write Issue
-*Skip if issue already exists in GitLab.*
+`get-issue` returns the issue plus every note in `notes[]`, oldest-last. Each note has `author`, `body`, `system` (true = GitLab-generated, e.g. "assigned to @x" — never needs a reply), and `created_at`.
 
-Use `write-issue`. Focus on the root cause, not just the symptom. Define what "fixed" looks like before any code is written.
+### 2. Decide which comments need your reply
 
-**Gate:** Issue has a clear problem statement and testable acceptance criteria.
+Walk the notes in chronological order (reverse the array first — GitLab returns newest-first). Skip system notes and anything you authored. For everything else, a comment needs your reply if:
+
+- It `@mentions` your username directly, **or**
+- You're the assignee, it asks a direct question or requests an action, and no later comment from you addresses it
+
+Then classify what's left:
+
+| Signal | Verdict |
+|---|---|
+| Explicit `@you` mention with a clear question/request, nothing from you after it | **Clearly needs reply** |
+| Directed at you but vague, or tags several people with no clear owner, or looks like it might already be resolved elsewhere (linked commit/MR, later comment) | **Ambiguous** |
+
+If there's nothing needing a reply, say so and stop — don't invent a reason to post.
+
+### 3. Ground the reply in the codebase
+
+Don't draft from the issue text alone. For each comment needing a reply:
+- Find the code the comment is actually about — `grep`, follow the call chain, check recent commits/MRs linked in the thread
+- Confirm current behavior before claiming it's fixed, broken, or unchanged
+- If there's no local codebase available, say so in the draft instead of guessing
+
+### 4. Draft and act
+
+- **Clearly needs reply** → draft the comment, then post it directly:
+  ```bash
+  python $GITLAB post-issue-comment <project> <number> "<reply>"
+  ```
+- **Ambiguous** → show the draft and your reasoning, and ask before posting. Don't post ambiguous replies unprompted.
+
+### 5. Report
+
+Summarize: what was posted, what's waiting on your confirmation (with the draft), and what was skipped and why (already answered, system note, no reply needed).
 
 ---
 
