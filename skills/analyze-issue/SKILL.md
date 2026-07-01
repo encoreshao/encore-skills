@@ -5,7 +5,7 @@ license: MIT
 compatibility: GitLab project access required. glab CLI optional. git required.
 metadata:
   author: encoreshao
-  version: "1.1"
+  version: "1.2"
   tags: gitlab issues analysis planning dev pm root-cause
 ---
 
@@ -28,6 +28,16 @@ glab issue view <number>
 ```
 
 See `gitlab-config` skill for first-time setup.
+
+## Before you start
+
+If `CODEBASE.md` exists at the project root, read it first:
+
+```bash
+cat CODEBASE.md
+```
+
+Check **Solved Issues** for similar past fixes, **Patterns** for established approaches, **Gotchas** for known traps. Skip re-discovering what's already there — start from what the team already knows.
 
 ## Steps
 

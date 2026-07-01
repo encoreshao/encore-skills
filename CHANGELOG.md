@@ -6,6 +6,16 @@ Versioning follows [Semantic Versioning](https://semver.org/).
 
 ## [Unreleased]
 
+## [1.2.0] - 2026-07-01
+
+### Added
+- `project-memory` skill — records root cause, fix approach, key files, and gotchas into `CODEBASE.md` after each resolved issue; read mode surfaces accumulated knowledge before analysis to avoid re-scanning
+
+### Changed
+- `analyze-issue`: added "Before you start" section — reads `CODEBASE.md` first if present, skipping re-discovery of known patterns
+- `fix-issue`: Phase 1 now checks `CODEBASE.md` for past fixes and established patterns before scanning the codebase
+- `workflow`: loop diagram updated to show memory cycle; added Phase 6 (update project memory) after post-merge verification
+
 ## [1.1.0] - 2026-07-01
 
 ### Changed

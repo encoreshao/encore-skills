@@ -1,7 +1,7 @@
 # encore-skills
 
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
-[![Skills](https://img.shields.io/badge/skills-7-blue)](#skills)
+[![Skills](https://img.shields.io/badge/skills-8-blue)](#skills)
 [![Works with](https://img.shields.io/badge/works%20with-Claude%20%7C%20Cursor%20%7C%20Codex-green)](#install)
 
 A portable workflow skills library for GitLab-focused development teams. Installs into Claude Code, Cursor, and Codex with a single command. Covers the full loop from writing an issue to merging a reviewed MR.
@@ -19,6 +19,7 @@ A portable workflow skills library for GitLab-focused development teams. Install
 | [`review-code`](skills/review-code/SKILL.md) | Dev / Lead | Pre-MR self-review — problem solved first, then security, correctness, quality |
 | [`create-mr`](skills/create-mr/SKILL.md) | Dev | Create a GitLab MR with a high-level summary that tells the reviewer what matters |
 | [`workflow`](skills/workflow/SKILL.md) | All | Full loop: write-issue → analyze → fix → review → MR → post-merge verify |
+| [`project-memory`](skills/project-memory/SKILL.md) | All | Record what was learned into `CODEBASE.md` so the next fix starts from knowledge, not a blank scan |
 
 ---
 
@@ -67,9 +68,10 @@ See [`skills/gitlab-config/SKILL.md`](skills/gitlab-config/SKILL.md) for full se
 ## Workflow
 
 ```
-write-issue → analyze-issue → fix-issue → review-code → create-mr
-      ↑                                                       |
-      └──────────────── feedback / new issue ─────────────────┘
+write-issue → analyze-issue → fix-issue → review-code → create-mr → [merge] → project-memory
+      ↑            ↑ reads                                                            |
+      │         CODEBASE.md                                                           ↓
+      └──────── feedback / new issue ─────────────────────────── CODEBASE.md grows smarter
 ```
 
 Each phase follows human thinking:

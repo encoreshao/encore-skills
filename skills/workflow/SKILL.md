@@ -5,7 +5,7 @@ license: MIT
 compatibility: git required. glab CLI optional. GitLab project access required.
 metadata:
   author: encoreshao
-  version: "1.1"
+  version: "1.2"
   tags: gitlab workflow dev pm orchestrator full-loop
 ---
 
@@ -16,9 +16,10 @@ Full development loop. The goal is not to merge an MR — it's to confirm the pr
 ## The loop
 
 ```
-write-issue → analyze-issue → fix-issue → review-code → create-mr → verify
-      ↑                                                                  |
-      └──────────── new issue from feedback ────────────────────────────┘
+write-issue → analyze-issue → fix-issue → review-code → create-mr → [merge] → project-memory
+      ↑            ↑ reads                                                           |
+      │         CODEBASE.md                                                          ↓
+      └──────── new issue from feedback ──────────────────────────── CODEBASE.md grows smarter
 ```
 
 ## Entry points
@@ -87,6 +88,20 @@ glab issue note <number> --message "Confirmed resolved in <env> after merge."
 ```
 
 If post-merge verification reveals the fix didn't work: reopen the issue, note what was tried and why it didn't work, and start the loop again from Phase 1 with better information.
+
+---
+
+### Phase 6: Update project memory
+
+Use `project-memory`. Record what you learned: root cause, fix approach, key files, any gotchas. Takes 5 minutes. Makes the next analysis start from knowledge instead of a blank scan.
+
+```bash
+# Append to CODEBASE.md in the project repo, then commit
+git add CODEBASE.md
+git commit -m "chore: update project memory after resolving #<N>"
+```
+
+**Gate:** CODEBASE.md updated and committed. The loop is now smarter than when it started.
 
 ## Principles
 

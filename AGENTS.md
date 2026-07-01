@@ -10,7 +10,8 @@ Invoke a skill by name when the task matches its description.
 | `analyze-issue` | — | Read a GitLab issue, identify the root cause (not just symptoms), surface real risks, and produce an implementation approach before writing any code |
 | `create-mr` | — | Create a GitLab Merge Request — clear title, high-level summary of what was changed and why, explicit confirmation the issue is resolved |
 | `fix-issue` | — | Implement a fix following the human-thinking loop — understand the root cause, plan the minimal change, implement, verify the problem is actually gone |
-| `gitlab-config` | — | Configure and verify GitLab API access — multiple instances, project aliases, and Personal Access Tokens. Run this first before any other GitLab skill. |
+| `gitlab-config` | — | Wire up GitLab API access — multiple instances, project aliases, tokens. Run this once before any other GitLab skill. |
+| `project-memory` | — | Record what was learned fixing an issue into CODEBASE.md — so the next analysis starts from knowledge, not a blank scan |
 | `review-code` | — | Pre-MR self-review — first confirm the problem is actually solved, then check for security, correctness, and simplicity |
 | `workflow` | — | Full GitLab development loop — from issue to confirmed-resolved. Covers write-issue, analyze-issue, fix-issue, review-code, create-mr, and post-merge verification. |
 | `write-issue` | — | Turn a rough idea into a well-structured GitLab issue with clear problem statement, root cause, and testable acceptance criteria |
@@ -41,6 +42,16 @@ glab issue view <number>
 ```
 
 See `gitlab-config` skill for first-time setup.
+
+## Before you start
+
+If `CODEBASE.md` exists at the project root, read it first:
+
+```bash
+cat CODEBASE.md
+```
+
+Check **Solved Issues** for similar past fixes, **Patterns** for established approaches, **Gotchas** for known traps. Skip re-discovering what's already there — start from what the team already knows.
 
 ## Steps
 
@@ -240,6 +251,7 @@ git checkout -b fix/<issue-number>-<short-description>
 
 Read the relevant code before writing a single line. You cannot fix what you don't understand.
 
+- Check `CODEBASE.md` first (if it exists) — scan Solved Issues for similar past fixes and Patterns for established approaches before searching the codebase from scratch
 - Find the code involved: `grep`, file search, follow the call chain
 - Understand why the current behavior happens — confirm the root cause from the analysis
 - If the root cause turns out to be different from the analysis, stop and update the analysis
@@ -305,16 +317,14 @@ Types: `feat`, `fix`, `refactor`, `test`, `chore`, `docs`
 
 ## Skill: `gitlab-config`
 
-> Configure and verify GitLab API access — multiple instances, project aliases, and Personal Access Tokens. Run this first before any other GitLab skill.
+> Wire up GitLab API access — multiple instances, project aliases, tokens. Run this once before any other GitLab skill.
 
 
 # GitLab Config
 
-Sets up GitLab API access for all other skills. Supports multiple GitLab servers (work, personal, client) from a single config file.
+Do this once. Every other skill reads from the same config — get it right here and everything else just works.
 
-## First-time setup
-
-### 1. Install Python dependency
+## Install
 
 ```bash
 pip install requests
@@ -322,35 +332,14 @@ pip install requests
 pip install -r ~/.claude/skills/gitlab-config/requirements.txt
 ```
 
-### 2. Create your config file
+## Configure
 
 ```bash
 cp ~/.claude/skills/gitlab-config/gitlab_config.json.template ~/.gitlab/config.json
 chmod 600 ~/.gitlab/config.json
 ```
 
-Then edit `~/.gitlab/config.json` with your real instances and tokens.
-
-### 3. Get a GitLab Personal Access Token
-
-For each GitLab instance:
-1. Go to **Settings → Access Tokens** (or `https://<your-gitlab>/-/user_settings/personal_access_tokens`)
-2. Create a token with **`api`** scope
-3. Copy and paste it into your config — it won't be shown again
-
-### 4. Verify
-
-```bash
-python ~/.claude/skills/gitlab-config/scripts/gitlab_api.py list-instances
-python ~/.claude/skills/gitlab-config/scripts/gitlab_api.py list-projects
-```
-
-## Config file
-
-Location (checked in order):
-1. `./gitlab_config.json` (current project directory)
-2. `~/.gitlab/config.json` ← recommended for personal config
-3. `~/.claude/skills/gitlab-config/gitlab_config.json`
+Edit `~/.gitlab/config.json`:
 
 ```json
 {
@@ -358,41 +347,43 @@ Location (checked in order):
   "instances": {
     "work": {
       "url": "https://gitlab.company.com",
-      "token": "glpat-xxxxxxxxxxxxxxxxxxxx",
-      "description": "Company GitLab"
+      "token": "glpat-xxxxxxxxxxxxxxxxxxxx"
     },
     "personal": {
       "url": "https://gitlab.com",
-      "token": "glpat-yyyyyyyyyyyyyyyyyyyy",
-      "description": "Personal projects"
+      "token": "glpat-yyyyyyyyyyyyyyyyyyyy"
     }
   },
   "projects": {
     "webapp": {
       "project_id": "acme/webapp",
-      "instance": "work",
-      "description": "Main web app"
+      "instance": "work"
     }
   }
 }
 ```
 
-**Env variable fallback** (single instance only):
+Get a token: **GitLab → Settings → Access Tokens** — create with `api` scope. It won't be shown again.
+
+**Env var fallback** (single instance only):
 ```bash
 export GITLAB_URL="https://gitlab.com"
 export GITLAB_TOKEN="glpat-xxxxxxxxxxxxxxxxxxxx"
 ```
 
-## API script reference
+## Verify
 
-All other skills use these scripts. Call them as:
+```bash
+python ~/.claude/skills/gitlab-config/scripts/gitlab_api.py list-instances
+python ~/.claude/skills/gitlab-config/scripts/gitlab_api.py list-projects
+```
+
+## API reference
+
+All other skills use these scripts:
 
 ```bash
 GITLAB="$HOME/.claude/skills/gitlab-config/scripts/gitlab_api.py"
-
-# List instances and projects
-python $GITLAB list-instances
-python $GITLAB list-projects
 
 # Issues
 python $GITLAB get-issue <project> <issue_iid>
@@ -408,27 +399,124 @@ python $GITLAB post-mr-comment <project> <mr_iid> "<comment>"
 # Stats
 python $GITLAB aggregate-issues <project> [days]
 
-# Use a specific instance (overrides default and project config)
+# Override instance for a single call
 python $GITLAB --instance=personal get-issue blog 42
 ```
 
-`<project>` accepts: project alias (`webapp`), numeric ID (`123`), or full path (`acme/webapp`).
+`<project>` accepts: alias (`webapp`), numeric ID (`123`), or full path (`acme/webapp`).
 
-## Instance resolution priority
+Config lookup order: `./gitlab_config.json` → `~/.gitlab/config.json` → skill directory.
 
-1. `--instance=<name>` flag (explicit)
-2. Instance configured on the project alias
-3. `default` instance in config
+Instance resolution: `--instance` flag → project's configured instance → `default`.
 
 ## Troubleshooting
 
 | Error | Fix |
 |-------|-----|
 | `GitLab configuration not found` | Create `~/.gitlab/config.json` or set env vars |
-| `Instance 'X' not found` | Check instance name spelling; run `list-instances` |
+| `Instance 'X' not found` | Check spelling; run `list-instances` |
 | `HTTP 401` | Token expired or wrong scope — regenerate with `api` scope |
 | `HTTP 403` | Token lacks permission for this action |
 | `HTTP 404` | Wrong project ID or issue number |
+
+---
+
+## Skill: `project-memory`
+
+> Record what was learned fixing an issue into CODEBASE.md — so the next analysis starts from knowledge, not a blank scan
+
+
+# Project Memory
+
+Every issue fix teaches you something about the codebase. Record it. The next session shouldn't have to rediscover the same root causes, the same patterns, the same traps. This is the knowledge layer that makes the loop smarter with every cycle.
+
+Two modes: **read** before analyzing, **update** after merging.
+
+## Read mode — before analyze-issue or fix-issue
+
+If `CODEBASE.md` exists at the project root, read it before touching the codebase:
+
+```bash
+cat CODEBASE.md
+```
+
+Scan these sections and apply what's already known:
+- **Architecture** — understand the layers before searching
+- **Patterns** — what's the established way to do what you're about to do?
+- **Solved Issues** — has something similar been fixed before?
+- **Gotchas** — what has surprised people here?
+
+If the relevant pattern or root cause is already documented: use it. Don't re-derive it.
+
+## Update mode — after merge
+
+Run this after the MR is merged and post-merge verification passes. Takes 5 minutes. Saves hours next cycle.
+
+### 1. Create CODEBASE.md if it doesn't exist
+
+```bash
+cat > CODEBASE.md <<'EOF'
+# Project Knowledge Base
+
+## Architecture
+
+## Patterns
+
+## Hotspots
+
+## Solved Issues
+
+| Issue | Root Cause | Fix Approach | Key Files |
+|-------|-----------|--------------|-----------|
+
+## Gotchas
+EOF
+
+git add CODEBASE.md
+```
+
+### 2. Append what you learned from this fix
+
+```markdown
+## Architecture
+- <Layer / component> — <what it does and where it lives>
+
+## Patterns
+- <Pattern name> — <what it is, where to find a canonical example>
+
+## Hotspots
+- `path/to/file` — <why it changes frequently, what to watch out for>
+
+## Solved Issues
+
+| Issue | Root Cause | Fix Approach | Key Files |
+|-------|-----------|--------------|-----------|
+| #<N> <title> | <one line: specific cause> | <one line: what changed> | `file1`, `file2` |
+
+## Gotchas
+- <What surprised you at the start> — <why it happens / how to avoid>
+```
+
+Write the Solved Issues row precisely:
+- **Root cause**: specific. "Email comparison is case-sensitive at the DB query layer" — not "login bug"
+- **Fix approach**: what changed. "Normalize email to lowercase before query" — not "edited user.rb"
+- **Key files**: 1–3 files that were the actual locus of the change
+
+Only add a Gotcha if it would have surprised you at the start of the investigation. If it was obvious from reading the code, skip it.
+
+### 3. Commit
+
+```bash
+git add CODEBASE.md
+git commit -m "chore: update project memory after resolving #<N>"
+```
+
+## What NOT to record
+
+- Things readable from the code itself (don't duplicate what's already clear from naming or comments)
+- Full implementation detail — keep it to one line; the MR has the code
+- Anything already covered in the README or official docs
+- Temporary state — only durable knowledge that will still be true in 6 months
 
 ---
 
@@ -543,9 +631,10 @@ Full development loop. The goal is not to merge an MR — it's to confirm the pr
 ## The loop
 
 ```
-write-issue → analyze-issue → fix-issue → review-code → create-mr → verify
-      ↑                                                                  |
-      └──────────── new issue from feedback ────────────────────────────┘
+write-issue → analyze-issue → fix-issue → review-code → create-mr → [merge] → project-memory
+      ↑            ↑ reads                                                           |
+      │         CODEBASE.md                                                          ↓
+      └──────── new issue from feedback ──────────────────────────── CODEBASE.md grows smarter
 ```
 
 ## Entry points
