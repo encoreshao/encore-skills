@@ -100,7 +100,7 @@ A portable workflow skills library for GitLab-focused development. Works with Cl
 ## One-liner install (Claude Code)
 
 ```bash
-curl -fsSL https://raw.githubusercontent.com/encore/encore-skills/main/scripts/setup.sh | bash -s -- --claude
+curl -fsSL https://raw.githubusercontent.com/encoreshao/encore-skills/main/scripts/setup.sh | bash -s -- --claude
 ```
 
 ## Workflow loop
@@ -948,7 +948,7 @@ echo ""
 cat > "$TARGET_FILE" <<'HEADER'
 # Available Skills
 
-This project uses the [encore-skills](https://github.com/encore/encore-skills) workflow library.
+This project uses the [encore-skills](https://github.com/encoreshao/encore-skills) workflow library.
 Invoke a skill by name when the task matches its description.
 
 ## Skills
@@ -1063,7 +1063,7 @@ Examples:
   ./scripts/setup.sh --all
 
 One-liner (Claude Code):
-  curl -fsSL https://raw.githubusercontent.com/encore/encore-skills/main/scripts/setup.sh | bash -s -- --claude
+  curl -fsSL https://raw.githubusercontent.com/encoreshao/encore-skills/main/scripts/setup.sh | bash -s -- --claude
 EOF
 }
 

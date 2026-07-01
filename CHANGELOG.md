@@ -30,6 +30,6 @@ Versioning follows [Semantic Versioning](https://semver.org/).
 - Setup scripts for Claude Code, Cursor, and Codex
 - Single-command install via `./scripts/setup.sh`
 
-[Unreleased]: https://github.com/encore/encore-skills/compare/v1.1.0...HEAD
-[1.1.0]: https://github.com/encore/encore-skills/compare/v1.0.0...v1.1.0
-[1.0.0]: https://github.com/encore/encore-skills/releases/tag/v1.0.0
+[Unreleased]: https://github.com/encoreshao/encore-skills/compare/v1.1.0...HEAD
+[1.1.0]: https://github.com/encoreshao/encore-skills/compare/v1.0.0...v1.1.0
+[1.0.0]: https://github.com/encoreshao/encore-skills/releases/tag/v1.0.0

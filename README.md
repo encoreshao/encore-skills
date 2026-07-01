@@ -32,7 +32,7 @@ A portable workflow skills library for GitLab-focused development. Works with Cl
 ## One-liner install (Claude Code)
 
 ```bash
-curl -fsSL https://raw.githubusercontent.com/encore/encore-skills/main/scripts/setup.sh | bash -s -- --claude
+curl -fsSL https://raw.githubusercontent.com/encoreshao/encore-skills/main/scripts/setup.sh | bash -s -- --claude
 ```
 
 ## Workflow loop

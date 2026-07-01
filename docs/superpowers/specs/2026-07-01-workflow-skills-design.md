@@ -84,7 +84,7 @@ Each skill follows human thinking:
 ./scripts/setup.sh --all
 
 # Or via curl (one-liner for sharing)
-curl -fsSL https://raw.githubusercontent.com/encore/encore-skills/main/scripts/setup.sh | bash -s -- --claude
+curl -fsSL https://raw.githubusercontent.com/encoreshao/encore-skills/main/scripts/setup.sh | bash -s -- --claude
 ```
 
 ## GitLab Integration

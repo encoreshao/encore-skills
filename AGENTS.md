@@ -1,6 +1,6 @@
 # Available Skills
 
-This project uses the [encore-skills](https://github.com/encore/encore-skills) workflow library.
+This project uses the [encore-skills](https://github.com/encoreshao/encore-skills) workflow library.
 Invoke a skill by name when the task matches its description.
 
 ## Skills

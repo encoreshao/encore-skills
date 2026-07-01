@@ -24,7 +24,7 @@ Examples:
   ./scripts/setup.sh --upgrade
 
 One-liner (Claude Code):
-  curl -fsSL https://raw.githubusercontent.com/encore/encore-skills/main/scripts/setup.sh | bash -s -- --claude
+  curl -fsSL https://raw.githubusercontent.com/encoreshao/encore-skills/main/scripts/setup.sh | bash -s -- --claude
 EOF
 }
 
