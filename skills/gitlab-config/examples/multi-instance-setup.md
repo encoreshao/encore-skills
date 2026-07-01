@@ -10,9 +10,9 @@ Developer works across: company GitLab, personal GitLab.com, and a client's self
   "default": "work",
   "instances": {
     "work": {
-      "url": "https://gitlab.ekohe.com",
+      "url": "https://gitlab.company.com",
       "token": "glpat-worktoken",
-      "description": "Ekohe GitLab"
+      "description": "Company GitLab"
     },
     "personal": {
       "url": "https://gitlab.com",
@@ -26,10 +26,10 @@ Developer works across: company GitLab, personal GitLab.com, and a client's self
     }
   },
   "projects": {
-    "encore": {
-      "project_id": "ekohe/encore",
+    "webapp": {
+      "project_id": "myorg/webapp",
       "instance": "work",
-      "description": "Encore Rails app"
+      "description": "Main web app"
     },
     "skills": {
       "project_id": "encoreshao/encore-skills",
@@ -46,7 +46,7 @@ Developer works across: company GitLab, personal GitLab.com, and a client's self
 GITLAB="$HOME/.claude/skills/gitlab-config/scripts/gitlab_api.py"
 
 # Work instance (default)
-python $GITLAB get-issue encore 42
+python $GITLAB get-issue webapp 42
 
 # Personal instance (via project alias)
 python $GITLAB get-issue skills 7
