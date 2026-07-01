@@ -14,11 +14,20 @@ metadata:
 Run this before writing a single line of code. The goal is to understand the *real* problem, not just execute the ticket literally.
 
 ## Input
-- GitLab issue URL, issue number (`#42`), or paste the issue text
+- Issue number (`#42`) with project alias or path, GitLab URL, or paste the issue text
 
 ```bash
-glab issue view <number>   # if glab is available
+# Preferred — supports multiple GitLab servers
+GITLAB="$HOME/.claude/skills/gitlab-config/scripts/gitlab_api.py"
+python $GITLAB get-issue <project> <number>
+# e.g. python $GITLAB get-issue webapp 42
+# e.g. python $GITLAB --instance=personal get-issue blog 7
+
+# Fallback with glab (single instance)
+glab issue view <number>
 ```
+
+See `gitlab-config` skill for first-time setup.
 
 ## Steps
 

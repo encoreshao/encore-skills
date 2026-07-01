@@ -62,22 +62,40 @@ The `Closes #<number>` line goes at the top of the description so GitLab auto-li
 ## Create
 
 ```bash
-# With glab
+# Preferred — API script (supports multiple GitLab servers)
+RESOLVE="$HOME/.claude/skills/gitlab-config/scripts/auto_resolve_issue.py"
+git push -u origin HEAD
+python $RESOLVE create-mr <project> <branch> main \
+  "fix: <what was fixed>" \
+  "Closes #<issue-number>
+
+<2-3 sentence summary>" \
+  <issue_iid>
+# e.g. python $RESOLVE create-mr webapp issue-42-fix-login main \
+#   "fix: users with uppercase emails can now log in" \
+#   "Closes #42\n\nNormalizes email input before DB lookup." 42
+
+# With glab (single instance)
 glab mr create \
   --title "fix: <what was fixed>" \
   --fill \
   --assignee @me \
   --remove-source-branch
 
-# Without glab
+# Without glab (manual)
 git push -u origin HEAD
-# Open the URL GitLab prints, fill in the description above
+# Open the URL GitLab prints, paste the description above
 ```
 
 ## After creating
 
-Share the MR URL. If the issue had stakeholders, note the MR on the issue:
+Share the MR URL. Post a note on the issue:
 
 ```bash
+# Via API (any instance)
+GITLAB="$HOME/.claude/skills/gitlab-config/scripts/gitlab_api.py"
+python $GITLAB post-issue-comment <project> <issue_iid> "Fixed in !<mr-number>: <url>"
+
+# Via glab
 glab issue note <number> --message "Fixed in !<mr-number>. MR: <url>"
 ```

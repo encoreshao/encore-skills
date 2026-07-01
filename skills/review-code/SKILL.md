@@ -16,10 +16,17 @@ Self-review before opening an MR. A reviewer's time is expensive — don't waste
 ## Input
 
 ```bash
-git diff origin/main   # everything you're about to ship
-```
+# Local diff (self-review before opening MR)
+git diff origin/main
 
-Or for an existing MR: `glab mr view <number> --web`
+# Review an existing MR via API (supports multiple GitLab servers)
+GITLAB="$HOME/.claude/skills/gitlab-config/scripts/gitlab_api.py"
+python $GITLAB get-mr <project> <mr_iid>      # MR metadata + comments
+python $GITLAB get-diff <project> <mr_iid>    # unified diff of all changes
+
+# Fallback with glab
+glab mr view <number> --web
+```
 
 ## Review order
 

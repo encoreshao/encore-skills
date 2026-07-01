@@ -10,6 +10,7 @@ Invoke a skill by name when the task matches its description.
 | `analyze-issue` | — | Read a GitLab issue, identify the root cause (not just symptoms), surface real risks, and produce an implementation approach before writing any code |
 | `create-mr` | — | Create a GitLab Merge Request — clear title, high-level summary of what was changed and why, explicit confirmation the issue is resolved |
 | `fix-issue` | — | Implement a fix following the human-thinking loop — understand the root cause, plan the minimal change, implement, verify the problem is actually gone |
+| `gitlab-config` | — | Configure and verify GitLab API access — multiple instances, project aliases, and Personal Access Tokens. Run this first before any other GitLab skill. |
 | `review-code` | — | Pre-MR self-review — first confirm the problem is actually solved, then check for security, correctness, and simplicity |
 | `workflow` | — | Full GitLab development loop — from issue to confirmed-resolved. Covers write-issue, analyze-issue, fix-issue, review-code, create-mr, and post-merge verification. |
 | `write-issue` | — | Turn a rough idea into a well-structured GitLab issue with clear problem statement, root cause, and testable acceptance criteria |
@@ -26,11 +27,20 @@ Invoke a skill by name when the task matches its description.
 Run this before writing a single line of code. The goal is to understand the *real* problem, not just execute the ticket literally.
 
 ## Input
-- GitLab issue URL, issue number (`#42`), or paste the issue text
+- Issue number (`#42`) with project alias or path, GitLab URL, or paste the issue text
 
 ```bash
-glab issue view <number>   # if glab is available
+# Preferred — supports multiple GitLab servers
+GITLAB="$HOME/.claude/skills/gitlab-config/scripts/gitlab_api.py"
+python $GITLAB get-issue <project> <number>
+# e.g. python $GITLAB get-issue webapp 42
+# e.g. python $GITLAB --instance=personal get-issue blog 7
+
+# Fallback with glab (single instance)
+glab issue view <number>
 ```
+
+See `gitlab-config` skill for first-time setup.
 
 ## Steps
 
@@ -162,23 +172,41 @@ The `Closes #<number>` line goes at the top of the description so GitLab auto-li
 ## Create
 
 ```bash
-# With glab
+# Preferred — API script (supports multiple GitLab servers)
+RESOLVE="$HOME/.claude/skills/gitlab-config/scripts/auto_resolve_issue.py"
+git push -u origin HEAD
+python $RESOLVE create-mr <project> <branch> main \
+  "fix: <what was fixed>" \
+  "Closes #<issue-number>
+
+<2-3 sentence summary>" \
+  <issue_iid>
+# e.g. python $RESOLVE create-mr webapp issue-42-fix-login main \
+#   "fix: users with uppercase emails can now log in" \
+#   "Closes #42\n\nNormalizes email input before DB lookup." 42
+
+# With glab (single instance)
 glab mr create \
   --title "fix: <what was fixed>" \
   --fill \
   --assignee @me \
   --remove-source-branch
 
-# Without glab
+# Without glab (manual)
 git push -u origin HEAD
-# Open the URL GitLab prints, fill in the description above
+# Open the URL GitLab prints, paste the description above
 ```
 
 ## After creating
 
-Share the MR URL. If the issue had stakeholders, note the MR on the issue:
+Share the MR URL. Post a note on the issue:
 
 ```bash
+# Via API (any instance)
+GITLAB="$HOME/.claude/skills/gitlab-config/scripts/gitlab_api.py"
+python $GITLAB post-issue-comment <project> <issue_iid> "Fixed in !<mr-number>: <url>"
+
+# Via glab
 glab issue note <number> --message "Fixed in !<mr-number>. MR: <url>"
 ```
 
@@ -198,7 +226,11 @@ Implements a fix following how a senior engineer actually thinks: understand fir
 - A feature branch (not `main`/`master`)
 
 ```bash
-# If on main, branch first
+# Preferred — creates branch named issue-<iid>-<title> automatically
+RESOLVE="$HOME/.claude/skills/gitlab-config/scripts/auto_resolve_issue.py"
+python $RESOLVE create-branch <issue_iid> "<issue title>"
+
+# Fallback (manual)
 git checkout -b fix/<issue-number>-<short-description>
 ```
 
@@ -271,6 +303,135 @@ Types: `feat`, `fix`, `refactor`, `test`, `chore`, `docs`
 
 ---
 
+## Skill: `gitlab-config`
+
+> Configure and verify GitLab API access — multiple instances, project aliases, and Personal Access Tokens. Run this first before any other GitLab skill.
+
+
+# GitLab Config
+
+Sets up GitLab API access for all other skills. Supports multiple GitLab servers (work, personal, client) from a single config file.
+
+## First-time setup
+
+### 1. Install Python dependency
+
+```bash
+pip install requests
+# or
+pip install -r ~/.claude/skills/gitlab-config/requirements.txt
+```
+
+### 2. Create your config file
+
+```bash
+cp ~/.claude/skills/gitlab-config/gitlab_config.json.template ~/.gitlab/config.json
+chmod 600 ~/.gitlab/config.json
+```
+
+Then edit `~/.gitlab/config.json` with your real instances and tokens.
+
+### 3. Get a GitLab Personal Access Token
+
+For each GitLab instance:
+1. Go to **Settings → Access Tokens** (or `https://<your-gitlab>/-/user_settings/personal_access_tokens`)
+2. Create a token with **`api`** scope
+3. Copy and paste it into your config — it won't be shown again
+
+### 4. Verify
+
+```bash
+python ~/.claude/skills/gitlab-config/scripts/gitlab_api.py list-instances
+python ~/.claude/skills/gitlab-config/scripts/gitlab_api.py list-projects
+```
+
+## Config file
+
+Location (checked in order):
+1. `./gitlab_config.json` (current project directory)
+2. `~/.gitlab/config.json` ← recommended for personal config
+3. `~/.claude/skills/gitlab-config/gitlab_config.json`
+
+```json
+{
+  "default": "work",
+  "instances": {
+    "work": {
+      "url": "https://gitlab.company.com",
+      "token": "glpat-xxxxxxxxxxxxxxxxxxxx",
+      "description": "Company GitLab"
+    },
+    "personal": {
+      "url": "https://gitlab.com",
+      "token": "glpat-yyyyyyyyyyyyyyyyyyyy",
+      "description": "Personal projects"
+    }
+  },
+  "projects": {
+    "webapp": {
+      "project_id": "acme/webapp",
+      "instance": "work",
+      "description": "Main web app"
+    }
+  }
+}
+```
+
+**Env variable fallback** (single instance only):
+```bash
+export GITLAB_URL="https://gitlab.com"
+export GITLAB_TOKEN="glpat-xxxxxxxxxxxxxxxxxxxx"
+```
+
+## API script reference
+
+All other skills use these scripts. Call them as:
+
+```bash
+GITLAB="$HOME/.claude/skills/gitlab-config/scripts/gitlab_api.py"
+
+# List instances and projects
+python $GITLAB list-instances
+python $GITLAB list-projects
+
+# Issues
+python $GITLAB get-issue <project> <issue_iid>
+python $GITLAB list-issues <project> [state] [labels...]
+python $GITLAB post-issue-comment <project> <issue_iid> "<comment>"
+
+# Merge Requests
+python $GITLAB get-mr <project> <mr_iid>
+python $GITLAB list-mrs <project> [state]
+python $GITLAB get-diff <project> <mr_iid>
+python $GITLAB post-mr-comment <project> <mr_iid> "<comment>"
+
+# Stats
+python $GITLAB aggregate-issues <project> [days]
+
+# Use a specific instance (overrides default and project config)
+python $GITLAB --instance=personal get-issue blog 42
+```
+
+`<project>` accepts: project alias (`webapp`), numeric ID (`123`), or full path (`acme/webapp`).
+
+## Instance resolution priority
+
+1. `--instance=<name>` flag (explicit)
+2. Instance configured on the project alias
+3. `default` instance in config
+
+## Troubleshooting
+
+| Error | Fix |
+|-------|-----|
+| `GitLab configuration not found` | Create `~/.gitlab/config.json` or set env vars |
+| `Instance 'X' not found` | Check instance name spelling; run `list-instances` |
+| `HTTP 401` | Token expired or wrong scope — regenerate with `api` scope |
+| `HTTP 403` | Token lacks permission for this action |
+| `HTTP 404` | Wrong project ID or issue number |
+
+---
+
 ## Skill: `review-code`
 
 > Pre-MR self-review — first confirm the problem is actually solved, then check for security, correctness, and simplicity
@@ -283,10 +444,17 @@ Self-review before opening an MR. A reviewer's time is expensive — don't waste
 ## Input
 
 ```bash
-git diff origin/main   # everything you're about to ship
-```
+# Local diff (self-review before opening MR)
+git diff origin/main
 
-Or for an existing MR: `glab mr view <number> --web`
+# Review an existing MR via API (supports multiple GitLab servers)
+GITLAB="$HOME/.claude/skills/gitlab-config/scripts/gitlab_api.py"
+python $GITLAB get-mr <project> <mr_iid>      # MR metadata + comments
+python $GITLAB get-diff <project> <mr_iid>    # unified diff of all changes
+
+# Fallback with glab
+glab mr view <number> --web
+```
 
 ## Review order
 

@@ -18,7 +18,11 @@ Implements a fix following how a senior engineer actually thinks: understand fir
 - A feature branch (not `main`/`master`)
 
 ```bash
-# If on main, branch first
+# Preferred — creates branch named issue-<iid>-<title> automatically
+RESOLVE="$HOME/.claude/skills/gitlab-config/scripts/auto_resolve_issue.py"
+python $RESOLVE create-branch <issue_iid> "<issue title>"
+
+# Fallback (manual)
 git checkout -b fix/<issue-number>-<short-description>
 ```
 

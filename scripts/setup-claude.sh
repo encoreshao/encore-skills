@@ -34,4 +34,19 @@ done
 
 echo ""
 echo "Done. $installed installed, $skipped skipped."
+
+# Install Python dependencies for gitlab-config skill
+REQS="$CLAUDE_SKILLS_DIR/gitlab-config/requirements.txt"
+if [ -f "$REQS" ]; then
+  echo ""
+  echo "Installing Python dependencies for gitlab-config..."
+  pip install -q -r "$REQS" && echo "  ✓ requests installed" || echo "  ⚠ pip install failed — run manually: pip install requests"
+fi
+
+echo ""
 echo "Restart Claude Code to pick up new skills."
+echo ""
+echo "Next: set up GitLab access with the gitlab-config skill:"
+echo "  cp ~/.claude/skills/gitlab-config/gitlab_config.json.template ~/.gitlab/config.json"
+echo "  # Edit ~/.gitlab/config.json with your tokens"
+echo "  python ~/.claude/skills/gitlab-config/scripts/gitlab_api.py list-instances"

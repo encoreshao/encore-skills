@@ -1,0 +1,27 @@
+{
+  "default": "work",
+  "instances": {
+    "work": {
+      "url": "https://gitlab.company.com",
+      "token": "glpat-xxxxxxxxxxxxxxxxxxxx",
+      "description": "Company GitLab instance"
+    },
+    "personal": {
+      "url": "https://gitlab.com",
+      "token": "glpat-yyyyyyyyyyyyyyyyyyyy",
+      "description": "Personal GitLab projects"
+    }
+  },
+  "projects": {
+    "webapp": {
+      "project_id": "acme/webapp",
+      "instance": "work",
+      "description": "Main web application"
+    },
+    "api": {
+      "project_id": "acme/api-server",
+      "instance": "work",
+      "description": "Backend API server"
+    }
+  }
+}
