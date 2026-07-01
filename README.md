@@ -1,7 +1,7 @@
 # encore-skills
 
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
-[![Skills](https://img.shields.io/badge/skills-8-blue)](#skills)
+[![Skills](https://img.shields.io/badge/skills-9-blue)](#skills)
 [![Works with](https://img.shields.io/badge/works%20with-Claude%20%7C%20Cursor%20%7C%20Codex-green)](#install)
 
 A portable workflow skills library for GitLab-focused development teams. Installs into Claude Code, Cursor, and Codex with a single command. Covers the full loop from writing an issue to merging a reviewed MR.
@@ -13,6 +13,7 @@ A portable workflow skills library for GitLab-focused development teams. Install
 | Skill | Who | What it does |
 |-------|-----|--------------|
 | [`gitlab-config`](skills/gitlab-config/SKILL.md) | Everyone | Wire up GitLab API access — multiple instances, tokens, project aliases |
+| [`pm-workflow`](skills/pm-workflow/SKILL.md) | PM / Designer | Full PM loop — draft issue, interact with users to validate, refine, finalize for dev. No codebase needed. |
 | [`write-issue`](skills/write-issue/SKILL.md) | PM / Dev | Turn a rough idea into a structured GitLab issue with testable acceptance criteria |
 | [`analyze-issue`](skills/analyze-issue/SKILL.md) | Dev / PM | Identify root cause, surface real risks, produce an implementation approach |
 | [`fix-issue`](skills/fix-issue/SKILL.md) | Dev | Implement following the human-thinking loop — understand, plan, code, verify |

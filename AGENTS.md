@@ -11,6 +11,7 @@ Invoke a skill by name when the task matches its description.
 | `create-mr` | — | Create a GitLab Merge Request — clear title, high-level summary of what was changed and why, explicit confirmation the issue is resolved |
 | `fix-issue` | — | Implement a fix following the human-thinking loop — understand the root cause, plan the minimal change, implement, verify the problem is actually gone |
 | `gitlab-config` | — | Wire up GitLab API access — multiple instances, project aliases, tokens. Run this once before any other GitLab skill. |
+| `pm-workflow` | — | Full PM/designer loop — draft an issue, interact with users and stakeholders to validate it, refine until dev-ready, then finalize |
 | `project-memory` | — | Record what was learned fixing an issue into docs/CONTEXT.md — so the next analysis starts from knowledge, not a blank scan |
 | `review-code` | — | Pre-MR self-review — first confirm the problem is actually solved, then check for security, correctness, and simplicity |
 | `workflow` | — | Full GitLab development loop — from issue to confirmed-resolved. Covers write-issue, analyze-issue, fix-issue, review-code, create-mr, and post-merge verification. |
@@ -431,6 +432,34 @@ Instance resolution: `--instance` flag → project's configured instance → `de
 | `HTTP 401` | Token expired or wrong scope — regenerate with `api` scope |
 | `HTTP 403` | Token lacks permission for this action |
 | `HTTP 404` | Wrong project ID or issue number |
+
+---
+
+## Skill: `pm-workflow`
+
+> Full PM/designer loop — draft an issue, interact with users and stakeholders to validate it, refine until dev-ready, then finalize
+
+
+# PM Workflow
+
+The PM loop is not about code — it's about getting the problem definition right before anyone writes a line. A vague issue creates vague work. Your job is done when a developer can pick this up and start without asking you a single question.
+
+## The loop
+
+```
+write-issue → share → gather-feedback → synthesize → refine → validate → finalize
+      ↑                      |
+      └───────── iterate ────┘
+```
+
+## Entry points
+
+| Where you are | Start here |
+|---------------|------------|
+| Rough idea, bug report, user complaint | Phase 1: Draft |
+| Issue drafted, not yet shared | Phase 2: Share |
+| Feedback collected, need to update issue | Phase 4: Synthesize |
+| Issue refined, checking if it's ready | Phase 5: Validate |
 
 ---
 

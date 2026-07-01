@@ -6,6 +6,11 @@ Versioning follows [Semantic Versioning](https://semver.org/).
 
 ## [Unreleased]
 
+## [1.3.0] - 2026-07-01
+
+### Added
+- `pm-workflow` skill — full PM/designer loop with no codebase dependency: draft issue → share → gather user feedback → synthesize → refine → validate → finalize. Includes structured feedback tracking, conflict resolution guidance, and dev-ready gate criteria.
+
 ## [1.2.0] - 2026-07-01
 
 ### Added
