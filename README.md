@@ -25,10 +25,16 @@ A portable workflow skills library for GitLab-focused development teams. Install
 
 ## Install
 
-**One-liner (Claude Code):**
+**Install (Claude Code):**
 
 ```bash
 curl -fsSL https://raw.githubusercontent.com/encoreshao/encore-skills/main/scripts/setup.sh | bash -s -- --claude
+```
+
+**Upgrade:**
+
+```bash
+curl -fsSL https://raw.githubusercontent.com/encoreshao/encore-skills/main/scripts/setup.sh | bash -s -- --upgrade
 ```
 
 **From a local clone:**
