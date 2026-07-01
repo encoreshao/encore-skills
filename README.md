@@ -82,6 +82,61 @@ bash ~/.encore-skills/scripts/setup.sh --all
 
 ---
 
+## Configure GitLab
+
+After installing, set up GitLab access. Every skill that talks to GitLab reads from the same config file — do this once.
+
+### From Claude Code (recommended)
+
+Restart Claude Code after install, then type:
+
+```
+/gitlab-config
+```
+
+Follow the prompts to add your GitLab instance URL and Personal Access Token.
+
+### From Cursor or Codex
+
+In your AI session, prompt:
+
+```
+run the gitlab-config skill to set up my GitLab access
+```
+
+### Manual setup
+
+```bash
+cp ~/.claude/skills/gitlab-config/gitlab_config.json.template ~/.gitlab/config.json
+chmod 600 ~/.gitlab/config.json
+```
+
+Edit `~/.gitlab/config.json` with your instance details:
+
+```json
+{
+  "default": "work",
+  "instances": {
+    "work": {
+      "url": "https://gitlab.yourcompany.com",
+      "token": "glpat-xxxxxxxxxxxxxxxxxxxx"
+    }
+  }
+}
+```
+
+Get a token: **GitLab → Settings → Access Tokens** — create with `api` scope.
+
+Verify it works:
+
+```bash
+python ~/.claude/skills/gitlab-config/scripts/gitlab_api.py list-instances
+```
+
+> **Multiple GitLab servers?** Add more entries under `instances` — see [`skills/gitlab-config/SKILL.md`](skills/gitlab-config/SKILL.md) for multi-instance config.
+
+---
+
 ## Uninstall
 
 ```bash
@@ -104,20 +159,6 @@ Or via the setup entry point:
 ./scripts/setup.sh --uninstall --claude
 ./scripts/setup.sh --uninstall --all
 ```
-
----
-
-## Prerequisites
-
-Before using any GitLab skill, run `gitlab-config` setup once:
-
-```bash
-cp ~/.claude/skills/gitlab-config/gitlab_config.json.template ~/.gitlab/config.json
-chmod 600 ~/.gitlab/config.json
-# Edit with your GitLab instances and tokens
-```
-
-See [`skills/gitlab-config/SKILL.md`](skills/gitlab-config/SKILL.md) for full setup and multi-instance configuration.
 
 ---
 
