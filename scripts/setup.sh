@@ -37,6 +37,7 @@ Options:
   --codex     Install into current project (AGENTS.md)
   --all       Install for all tools
   --upgrade   Pull latest + re-install Claude, remind about Cursor/Codex
+  --uninstall Run the uninstall wizard (pass --claude/--cursor/--codex/--all)
   --help      Show this help
 
 Examples:
@@ -44,6 +45,8 @@ Examples:
   ./scripts/setup.sh --cursor --codex
   ./scripts/setup.sh --all
   ./scripts/setup.sh --upgrade
+  ./scripts/setup.sh --uninstall --claude
+  ./scripts/setup.sh --uninstall --all
 
 One-liner (Claude Code):
   curl -fsSL https://raw.githubusercontent.com/encoreshao/encore-skills/main/scripts/setup.sh | bash -s -- --claude
@@ -54,6 +57,15 @@ if [ $# -eq 0 ]; then
   usage
   exit 1
 fi
+
+# Check for --uninstall first — forward remaining args to uninstall.sh
+for arg in "$@"; do
+  if [ "$arg" = "--uninstall" ]; then
+    args=()
+    for a in "$@"; do [ "$a" != "--uninstall" ] && args+=("$a"); done
+    exec bash "$SCRIPTS_DIR/uninstall.sh" "${args[@]:-}"
+  fi
+done
 
 do_claude=false
 do_cursor=false

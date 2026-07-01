@@ -38,23 +38,71 @@ A portable workflow skills library for GitLab teams. Works across Claude Code, C
 
 ## Install
 
+### Claude Code — CLI, Desktop app, and IDE extensions
+
+Skills install globally into `~/.claude/skills/` and are picked up by all Claude Code surfaces automatically.
+
 ```bash
-# Install (Claude Code)
+# Install
 curl -fsSL https://raw.githubusercontent.com/encoreshao/encore-skills/main/scripts/setup.sh | bash -s -- --claude
 
 # Upgrade
 curl -fsSL https://raw.githubusercontent.com/encoreshao/encore-skills/main/scripts/setup.sh | bash -s -- --upgrade
 ```
 
-**Other tools — from a local clone:**
+Restart Claude Code (CLI, Desktop, or IDE extension) after install.
+
+### Cursor
+
+Installs per-project into `.cursor/rules/`. Run inside your project directory.
 
 ```bash
-git clone https://github.com/encoreshao/encore-skills.git
-cd encore-skills
+git clone https://github.com/encoreshao/encore-skills.git ~/.encore-skills
+cd /your/project
+bash ~/.encore-skills/scripts/setup.sh --cursor
+```
 
-./scripts/setup.sh --cursor    # Cursor (run inside your project)
-./scripts/setup.sh --codex     # Codex (run inside your project)
-./scripts/setup.sh --all       # All three at once
+Restart Cursor after install.
+
+### Codex — CLI and Desktop
+
+Generates an `AGENTS.md` file in the current project directory. Run inside your project.
+
+```bash
+git clone https://github.com/encoreshao/encore-skills.git ~/.encore-skills
+cd /your/project
+bash ~/.encore-skills/scripts/setup.sh --codex
+```
+
+### All tools at once
+
+```bash
+bash ~/.encore-skills/scripts/setup.sh --all
+```
+
+---
+
+## Uninstall
+
+```bash
+# Remove from Claude Code / Claude Desktop
+./scripts/uninstall.sh --claude
+
+# Remove from Cursor (current project)
+./scripts/uninstall.sh --cursor
+
+# Remove from Codex (current project)
+./scripts/uninstall.sh --codex
+
+# Remove from all tools
+./scripts/uninstall.sh --all
+```
+
+Or via the setup entry point:
+
+```bash
+./scripts/setup.sh --uninstall --claude
+./scripts/setup.sh --uninstall --all
 ```
 
 ---
