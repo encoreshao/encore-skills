@@ -1,20 +1,17 @@
 #!/usr/bin/env bash
-set -euo pipefail
+set -eo pipefail
 
 ENCORE_SKILLS_REPO="https://github.com/encoreshao/encore-skills.git"
 ENCORE_SKILLS_HOME="${ENCORE_SKILLS_HOME:-${HOME}/.encore-skills}"
 
-# Detect if we're running from a real local checkout.
-# BASH_SOURCE[0] is empty when piped via curl, or a /dev/fd path when
-# run via bash <(...) — neither has setup-claude.sh next to it.
-_src="${BASH_SOURCE[0]:-}"
+# $0 is "bash" when piped from curl/stdin, or the file path when run locally.
+# We check whether a sibling setup-claude.sh actually exists to be certain.
 _scripts_dir=""
-if [ -n "$_src" ] && [ -f "$_src" ]; then
-  _scripts_dir="$(cd "$(dirname "$_src")" && pwd)"
+if [ -f "$0" ]; then
+  _scripts_dir="$(cd "$(dirname "$0")" && pwd)"
 fi
 
 if [ -z "$_scripts_dir" ] || [ ! -f "$_scripts_dir/setup-claude.sh" ]; then
-  # Not running from a local checkout — clone/update then re-exec
   if [ -d "$ENCORE_SKILLS_HOME/.git" ]; then
     echo "Updating encore-skills at $ENCORE_SKILLS_HOME..."
     git -C "$ENCORE_SKILLS_HOME" pull --ff-only origin main
