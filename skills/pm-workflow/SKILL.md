@@ -11,7 +11,7 @@ metadata:
 
 # PM Workflow
 
-The PM loop is not about code — it's about getting the problem definition right before anyone writes a line. A vague issue creates vague work. Your job is done when a developer can pick this up and start without asking you a single question.
+The PM loop is not about code — it's about getting the problem definition right before anyone writes a line. A vague issue creates vague work. Your job is done when an engineer can pick this up and start without asking you a single question.
 
 ## The loop
 
@@ -99,7 +99,7 @@ Before updating the issue, process what you heard:
 3. **What conflicts?** — two stakeholders said opposite things; you must decide or escalate
 4. **What's new scope?** — things that came up that belong in a separate issue
 
-For conflicts: make a call and document the reasoning. Don't leave ambiguity in the issue — that's what a developer will hit at 11pm.
+For conflicts: make a call and document the reasoning. Don't leave ambiguity in the issue — that's what an engineer will hit at 11pm.
 
 For new scope: open a linked issue. Don't expand this one.
 
@@ -125,11 +125,11 @@ glab issue update <issue_iid> --description "UPDATED_DESCRIPTION"
 
 ---
 
-## Phase 6: Validate — is it dev-ready?
+## Phase 6: Validate — is it eng-ready?
 
 Read the issue as if you've never seen it. Ask:
 
-- [ ] Could a developer start on this without asking me a single question?
+- [ ] Could an engineer start on this without asking me a single question?
 - [ ] Is every acceptance criterion specific and testable?
 - [ ] Is the root cause identified (for bugs) or clearly stated (for features)?
 - [ ] Is the scope boundary explicit — what's in and what's out?
@@ -148,18 +148,18 @@ Mark it ready and hand it off.
 ```bash
 GITLAB="$HOME/.claude/skills/gitlab-config/scripts/gitlab_api.py"
 
-# Add labels to signal dev-ready
-glab issue update <issue_iid> --label "ready-for-dev"
+# Add label to signal eng-ready
+glab issue update <issue_iid> --label "ready-for-eng"
 
 # Post a comment summarizing what was validated
 python $GITLAB post-issue-comment <project> <issue_iid> \
-  "Issue validated with stakeholders. Ready for dev. Key decisions: <summary of any non-obvious calls made>"
+  "Issue validated with stakeholders. Ready for eng. Key decisions: <summary of any non-obvious calls made>"
 
 # Assign if known
-glab issue update <issue_iid> --assignee <developer-handle>
+glab issue update <issue_iid> --assignee <engineer-handle>
 ```
 
-Notify the developer or team in whatever channel they use. Don't just change the label and disappear — confirm they've seen it.
+Notify the engineer or team in whatever channel they use. Don't just change the label and disappear — confirm they've seen it.
 
 ---
 
@@ -169,4 +169,4 @@ Notify the developer or team in whatever channel they use. Don't just change the
 - **One issue, one problem.** If scope grows, open a new issue. Don't expand this one mid-flight.
 - **Conflicts belong in the issue, not in your head.** If you made a call, write it down and why.
 - **Iterate fast, then stop.** Two rounds of feedback is usually enough. Three is the max. After that, you're polishing, not improving.
-- **Done means a developer can start.** Not "done means everyone agreed." Consensus is nice; clarity is required.
+- **Done means an engineer can start.** Not "done means everyone agreed." Consensus is nice; clarity is required.

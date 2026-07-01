@@ -6,7 +6,7 @@ compatibility: GitLab project access required. glab CLI optional. git required.
 metadata:
   author: encoreshao
   version: "1.2"
-  tags: gitlab issues analysis planning dev pm root-cause
+  tags: gitlab issues analysis planning engineer pm root-cause
 ---
 
 # Analyze Issue

@@ -6,7 +6,7 @@ compatibility: git required. glab CLI optional. GitLab project access required.
 metadata:
   author: encoreshao
   version: "1.1"
-  tags: gitlab mr merge-request dev workflow ship
+  tags: gitlab mr merge-request engineer workflow ship
 ---
 
 # Create MR

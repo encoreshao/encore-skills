@@ -4,7 +4,7 @@
 [![Skills](https://img.shields.io/badge/skills-9-blue)](#skills)
 [![Works with](https://img.shields.io/badge/works%20with-Claude%20%7C%20Cursor%20%7C%20Codex-green)](#install)
 
-A portable workflow skills library for GitLab teams. Works across Claude Code, Cursor, and Codex. Covers two full loops: one for PMs and designers, one for developers — from rough idea to confirmed-resolved issue.
+A portable workflow skills library for GitLab teams. Works across Claude Code, Cursor, and Codex. Covers two full loops: one for PMs and designers, one for engineers — from rough idea to confirmed-resolved issue.
 
 ---
 
@@ -20,14 +20,14 @@ A portable workflow skills library for GitLab teams. Works across Claude Code, C
 
 | Skill | What it does |
 |-------|--------------|
-| [`pm-workflow`](skills/pm-workflow/SKILL.md) | Full PM loop — draft issue, interact with users and stakeholders to validate, refine until dev-ready, finalize. No codebase needed. |
+| [`pm-workflow`](skills/pm-workflow/SKILL.md) | Full PM loop — draft issue, interact with users and stakeholders to validate, refine until eng-ready, finalize. No codebase needed. |
 | [`write-issue`](skills/write-issue/SKILL.md) | Turn a rough idea into a structured GitLab issue with clear problem statement and testable acceptance criteria. |
 
-### Developer loop
+### Engineer loop
 
 | Skill | What it does |
 |-------|--------------|
-| [`workflow`](skills/workflow/SKILL.md) | Full dev loop orchestrator — analyze → fix → review → MR → post-merge verify → update memory. |
+| [`workflow`](skills/workflow/SKILL.md) | Full engineer loop orchestrator — analyze → fix → review → MR → post-merge verify → update memory. |
 | [`analyze-issue`](skills/analyze-issue/SKILL.md) | Read an issue, identify the root cause (not just symptoms), surface real risks, produce an implementation approach. |
 | [`fix-issue`](skills/fix-issue/SKILL.md) | Implement following the human-thinking loop — understand, plan, code, verify the problem is actually gone. |
 | [`review-code`](skills/review-code/SKILL.md) | Pre-MR self-review — problem solved first, then security, correctness, and code quality. |
@@ -83,9 +83,9 @@ write-issue → share → gather-feedback → refine → validate → finalize
       └───────── iterate ────┘
 ```
 
-Done when a developer can pick up the issue and start without asking a single clarifying question.
+Done when an engineer can pick up the issue and start without asking a single clarifying question.
 
-### Developer — full loop with memory
+### Engineer — full loop with memory
 
 ```
 analyze-issue → fix-issue → review-code → create-mr → [merge] → project-memory
@@ -96,7 +96,7 @@ analyze-issue → fix-issue → review-code → create-mr → [merge] → projec
 
 Each cycle follows the same thinking: **Understand → Plan → Implement → Validate → Ship or loop.**
 
-The `workflow` skill runs the full developer loop as a single guided session.
+The `workflow` skill runs the full engineer loop as a single guided session.
 
 ---
 
@@ -104,7 +104,7 @@ The `workflow` skill runs the full developer loop as a single guided session.
 
 | Requirement | Used by |
 |-------------|---------|
-| git | All dev skills |
+| git | All engineer skills |
 | Python 3.8+ and pip | `gitlab-config` |
 | GitLab Personal Access Token (`api` scope) | All GitLab skills |
 | glab CLI *(optional)* | `create-mr`, `review-code`, `pm-workflow` |

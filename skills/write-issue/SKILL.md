@@ -55,7 +55,7 @@ What this issue does NOT cover. Prevents scope creep.
 ### 3. Sanity check before submitting
 
 Ask yourself:
-- Could a developer start working on this without asking you any questions?
+- Could an engineer start working on this without asking you any questions?
 - Are the acceptance criteria specific enough to verify with a test?
 - Is the root cause identified (for bugs) or is it still a guess?
 

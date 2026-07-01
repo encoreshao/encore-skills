@@ -1,7 +1,7 @@
 # Example: Multi-instance GitLab setup
 
 ## Scenario
-Developer works across: company GitLab, personal GitLab.com, and a client's self-hosted instance.
+Engineer works across: company GitLab, personal GitLab.com, and a client's self-hosted instance.
 
 ## Config (~/.gitlab/config.json)
 

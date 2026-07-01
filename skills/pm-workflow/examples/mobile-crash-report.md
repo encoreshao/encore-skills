@@ -25,7 +25,7 @@ Using `write-issue`:
 
 Posted issue link to:
 - 3 affected users via support thread
-- iOS developer (tech lead)
+- iOS engineer (tech lead)
 - Product stakeholder
 
 Questions asked:
@@ -77,7 +77,7 @@ Saturation reached after 2 rounds — new feedback confirming, not changing.
 
 ## Phase 6: Validate
 
-- [x] Developer can start without asking questions? Yes — format, expected behavior, and crash event identified
+- [x] Engineer can start without asking questions? Yes — format, expected behavior, and crash event identified
 - [x] Acceptance criteria testable? Yes — Crashlytics metric is measurable
 - [x] Root cause identified? Yes — HEIC with no server-side handling
 - [x] Scope explicit? Yes — video explicitly deferred
@@ -90,7 +90,7 @@ Saturation reached after 2 rounds — new feedback confirming, not changing.
 ## Phase 7: Finalize
 
 ```bash
-glab issue update 47 --label "ready-for-dev"
+glab issue update 47 --label "ready-for-eng"
 python $GITLAB post-issue-comment webapp 47 \
-  "Validated with 3 users and tech lead. Root cause: HEIC format not handled server-side. Scope limited to photo upload; video deferred to #51. Ready for dev."
+  "Validated with 3 users and tech lead. Root cause: HEIC format not handled server-side. Scope limited to photo upload; video deferred to #51. Ready for eng."
 ```

@@ -6,7 +6,7 @@ compatibility: git required. glab CLI optional.
 metadata:
   author: encoreshao
   version: "1.1"
-  tags: gitlab review security code-quality dev workflow pre-mr
+  tags: gitlab review security code-quality engineer workflow pre-mr
 ---
 
 # Review Code

@@ -6,7 +6,7 @@ compatibility: git required. glab CLI optional. GitLab project access required.
 metadata:
   author: encoreshao
   version: "1.2"
-  tags: gitlab workflow dev pm orchestrator full-loop
+  tags: gitlab workflow engineer pm orchestrator full-loop
 ---
 
 # Workflow

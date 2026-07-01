@@ -442,7 +442,7 @@ Instance resolution: `--instance` flag → project's configured instance → `de
 
 # PM Workflow
 
-The PM loop is not about code — it's about getting the problem definition right before anyone writes a line. A vague issue creates vague work. Your job is done when a developer can pick this up and start without asking you a single question.
+The PM loop is not about code — it's about getting the problem definition right before anyone writes a line. A vague issue creates vague work. Your job is done when an engineer can pick this up and start without asking you a single question.
 
 ## The loop
 
@@ -686,7 +686,7 @@ What this issue does NOT cover. Prevents scope creep.
 ### 3. Sanity check before submitting
 
 Ask yourself:
-- Could a developer start working on this without asking you any questions?
+- Could an engineer start working on this without asking you any questions?
 - Are the acceptance criteria specific enough to verify with a test?
 - Is the root cause identified (for bugs) or is it still a guess?
 
