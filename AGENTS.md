@@ -43,7 +43,7 @@ python $GITLAB sync-issue <project> <number>
 glab issue view <number>
 ```
 
-See `gitlab-config` skill for first-time setup and the local-memory cache it maintains — a prior analysis you saved with `annotate` is worth checking before you redo the work.
+See `gitlab-config` skill for first-time setup and the local-memory cache it maintains — a prior analysis you saved with `annotate-issue` is worth checking before you redo the work.
 
 ## Before you start
 
@@ -141,7 +141,7 @@ What is the smallest, most targeted change that fixes the root cause?
 Save it so re-analysis doesn't start from scratch next time:
 ```bash
 CACHE="$HOME/.claude/skills/gitlab-config/scripts/gitlab_cache.py"
-python $CACHE annotate <instance> <project_id> <number> analysis "<root cause + approach, 2-3 sentences>"
+python $CACHE annotate-issue <instance> <project_id> <number> analysis "<root cause + approach, 2-3 sentences>"
 ```
 
 ---
@@ -509,27 +509,34 @@ Config lookup order: `./gitlab_config.json` → `~/.gitlab/config.json` → skil
 
 Instance resolution: `--instance` flag → project's configured instance → `default`.
 
-## Local memory (instance / project / issue cache)
+## Local memory (instance / group / project / issue cache)
 
 Every other skill should prefer these over the plain `get-issue`/`get-project` calls above — they hit the API the same way, but merge the result into `~/.gitlab/cache/<instance>/...` instead of throwing it away. Nothing already cached is ever dropped; new data layers on top.
 
 ```bash
 python $GITLAB sync-project <project>              # project metadata + team roster -> project.json, feeds users.json
+                                                    # also syncs the project's parent group, if it has one
+python $GITLAB sync-group <group_path>             # group metadata + members -> group.json, feeds users.json
 python $GITLAB sync-issue <project> <issue_iid>     # issue + notes, merged by note id -> issues/<iid>.json
 python $GITLAB cached-issue <project> <issue_iid>   # read the cache with no network call
 
 CACHE="$HOME/.claude/skills/gitlab-config/scripts/gitlab_cache.py"
 python $CACHE get-users <instance>                            # instance-level team/user directory
+python $CACHE get-group <instance> <group_path>               # group-level metadata + members
 python $CACHE get-project <instance> <project_id>              # project-level metadata
-python $CACHE annotate <instance> <project_id> <issue_iid> <key> <value>   # record your own analysis/notes against an issue
+python $CACHE annotate-issue <instance> <project_id> <issue_iid> <key> <value>     # record analysis/notes against an issue
+python $CACHE annotate-project <instance> <project_id> <key> <value>               # record project-wide memory (see project-memory)
 ```
 
 Why this exists: analysis, triage, and reply-drafting all re-read the same issue and the same team roster repeatedly. `sync-issue` still calls the API every time (so new comments are never missed) but merges onto the cached copy — so your own annotations (root cause, which comments you've already handled) survive, and you're not re-deriving what you already knew. `sync-project` builds the team directory once so usernames resolve to real names without a separate lookup per comment.
 
+A GitLab **group** can hold several projects — e.g. group `ekohe/kurrant` holds projects `kurrant.web` and `camp`. `sync-project` automatically syncs the parent group too (detected from the project's `namespace`), so the group's roster and metadata are fetched once and shared across every project under it instead of being duplicated per project.
+
 Cache layout:
 ```
 ~/.gitlab/cache/<instance>/users.json                              # instance-level: every user seen, keyed by id
-~/.gitlab/cache/<instance>/projects/<project>/project.json         # project-level: metadata + members
+~/.gitlab/cache/<instance>/groups/<group>/group.json               # group-level: metadata + members, shared by its projects
+~/.gitlab/cache/<instance>/projects/<project>/project.json         # project-level: metadata, members, and your own `_memory`
 ~/.gitlab/cache/<instance>/projects/<project>/issues/<iid>.json    # issue-level: issue + notes + your own `_notes` annotations
 ```
 
@@ -714,7 +721,7 @@ If verdict is "Needs changes" → back to `fix-issue`. Fix, don't rationalize.
 
 # Triage Issue
 
-Reads an issue and its comment thread, figures out which comments genuinely need a reply from you, grounds the reply in the actual codebase (not guesswork), and replies — directly when it's clearly warranted, or after checking with you when it's not.
+Reads an issue and its comment thread, figures out which comments genuinely need a reply from you, grounds the reply in the actual codebase (not guesswork), drafts it in your own voice, and shows it to you — every time, no exceptions — before anything gets posted.
 
 ## Input
 - Issue number (`#42`) with project alias or path, or a GitLab URL
@@ -744,12 +751,12 @@ Walk the notes in chronological order (reverse the array first — GitLab return
 - It `@mentions` your username directly, **or**
 - You're the assignee, it asks a direct question or requests an action, and no later comment from you addresses it
 
-Then classify what's left:
+Then classify what's left — this only shapes how you present the draft in Step 4, it never decides whether you ask first, because you always ask first:
 
 | Signal | Verdict |
 |---|---|
-| Explicit `@you` mention with a clear question/request, nothing from you after it | **Clearly needs reply** |
-| Directed at you but vague, or tags several people with no clear owner, or looks like it might already be resolved elsewhere (linked commit/MR, later comment) | **Ambiguous** |
+| Explicit `@you` mention with a clear question/request, nothing from you after it | **Clearly needs reply** — present the draft as ready to send |
+| Directed at you but vague, or tags several people with no clear owner, or looks like it might already be resolved elsewhere (linked commit/MR, later comment) | **Ambiguous** — present the draft plus your reasoning for why it's unclear |
 
 If there's nothing needing a reply, say so and stop — don't invent a reason to post.
 
@@ -761,7 +768,7 @@ Don't draft from the issue text alone. For each comment needing a reply:
 - Confirm current behavior before claiming it's fixed, broken, or unchanged
 - If there's no local codebase available, say so in the draft instead of guessing
 
-### 4. Draft and act
+### 4. Draft, then always confirm before posting
 
 **Match the reply's length and format to the comment it answers — don't run every reply through the same template.**
 
@@ -770,19 +777,24 @@ Don't draft from the issue text alone. For each comment needing a reply:
 - A comment that's really a status update or FYI, not a question, may not need prose at all — a link or a single confirming line is enough.
 - Never add sections, disclaimers, or "let me know if you have questions" filler the comment didn't ask for.
 
-Then:
+**Write it in the assignee's own voice — first person, like they'd actually type it, not a templated support-ticket reply.** Match their tone from their own earlier comments in the thread (direct vs. casual, how much context they usually give). Personalized doesn't mean less accurate: state what's true, cite the file/commit/behavior you actually checked in Step 3, and don't oversell or hedge past what you confirmed.
 
-- **Clearly needs reply** → draft the comment at the right size, post it, then record the note id so it's never re-flagged:
-  ```bash
-  python $GITLAB post-issue-comment <project> <number> "<reply>"
-  CACHE="$HOME/.claude/skills/gitlab-config/scripts/gitlab_cache.py"
-  python $CACHE annotate <instance> <project_id> <number> replied_note_ids '[<note_id>, ...]'
-  ```
-- **Ambiguous** → show the draft and your reasoning, and ask before posting. Don't post ambiguous replies unprompted, and don't mark it replied until you actually post it.
+**Never post without an explicit go-ahead — for both verdicts, every time:**
+
+1. Show the draft, labeled by its Step 2 verdict (ready to send / ambiguous + why).
+2. Wait for the user to approve, edit, or reject it.
+3. Only after approval:
+   ```bash
+   python $GITLAB post-issue-comment <project> <number> "<reply>"
+   CACHE="$HOME/.claude/skills/gitlab-config/scripts/gitlab_cache.py"
+   python $CACHE annotate-issue <instance> <project_id> <number> replied_note_ids '[<note_id>, ...]'
+   ```
+
+Don't post a "clearly needs reply" draft just because it's clearly needed — clear only means you're confident in the content, not that you skip confirmation.
 
 ### 5. Report
 
-Summarize: what was posted, what's waiting on your confirmation (with the draft), and what was skipped and why (already answered, system note, no reply needed).
+Summarize: what's drafted and waiting on your approval (show each draft), and what was skipped and why (already answered, system note, no reply needed). Nothing here should say "posted" unless the user already approved it in this session.
 
 ---
 

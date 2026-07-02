@@ -27,7 +27,7 @@ python $GITLAB sync-issue <project> <number>
 glab issue view <number>
 ```
 
-See `gitlab-config` skill for first-time setup and the local-memory cache it maintains — a prior analysis you saved with `annotate` is worth checking before you redo the work.
+See `gitlab-config` skill for first-time setup and the local-memory cache it maintains — a prior analysis you saved with `annotate-issue` is worth checking before you redo the work.
 
 ## Before you start
 
@@ -125,5 +125,5 @@ What is the smallest, most targeted change that fixes the root cause?
 Save it so re-analysis doesn't start from scratch next time:
 ```bash
 CACHE="$HOME/.claude/skills/gitlab-config/scripts/gitlab_cache.py"
-python $CACHE annotate <instance> <project_id> <number> analysis "<root cause + approach, 2-3 sentences>"
+python $CACHE annotate-issue <instance> <project_id> <number> analysis "<root cause + approach, 2-3 sentences>"
 ```

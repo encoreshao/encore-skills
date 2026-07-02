@@ -32,7 +32,7 @@ A portable workflow skills library for GitLab teams. Works across Claude Code, C
 | [`fix-issue`](skills/fix-issue/SKILL.md) | Implement following the human-thinking loop — understand, plan, code, verify the problem is actually gone. |
 | [`review-code`](skills/review-code/SKILL.md) | Pre-MR self-review — problem solved first, then security, correctness, and code quality. |
 | [`create-mr`](skills/create-mr/SKILL.md) | Create a GitLab MR with a high-level summary that tells the reviewer what matters in 30 seconds, and calls out related work already mentioned in the issue thread. |
-| [`triage-issue`](skills/triage-issue/SKILL.md) | Check an issue's comments for ones that need your reply, ground the reply in the actual codebase, post when it's clearly warranted. |
+| [`triage-issue`](skills/triage-issue/SKILL.md) | Check an issue's comments for ones that need your reply, ground the reply in the actual codebase, draft it in your voice — always shown for approval before it's posted. |
 | [`project-memory`](skills/project-memory/SKILL.md) | Record root cause, fix approach, and gotchas into `docs/CONTEXT.md` — so the next fix starts from knowledge, not a blank scan. |
 
 ---
@@ -144,11 +144,14 @@ python ~/.claude/skills/gitlab-config/scripts/gitlab_api.py list-instances
 
 ```
 ~/.gitlab/cache/<instance>/users.json                              # instance-level: every user seen (team directory)
-~/.gitlab/cache/<instance>/projects/<project>/project.json         # project-level: metadata + members
+~/.gitlab/cache/<instance>/groups/<group>/group.json                # group-level: metadata + members, shared by its projects
+~/.gitlab/cache/<instance>/projects/<project>/project.json         # project-level: metadata, members, and your own project memory
 ~/.gitlab/cache/<instance>/projects/<project>/issues/<iid>.json    # issue-level: issue + notes + your own analysis
 ```
 
-`sync-issue` and `sync-project` still call the GitLab API every time — new comments are never missed — but merge the result onto whatever's cached instead of discarding it, so nothing already known gets overwritten. See [`skills/gitlab-config/SKILL.md`](skills/gitlab-config/SKILL.md#local-memory-instance--project--issue-cache) for the full command reference.
+A GitLab group can hold several projects (e.g. group `ekohe/kurrant` holds `kurrant.web` and `camp`) — `sync-project` detects the parent group and syncs it too, so the team roster is fetched once and shared across every project under it.
+
+`sync-issue`, `sync-project`, and `sync-group` still call the GitLab API every time — new comments are never missed — but merge the result onto whatever's cached instead of discarding it, so nothing already known gets overwritten. See [`skills/gitlab-config/SKILL.md`](skills/gitlab-config/SKILL.md#local-memory-instance--group--project--issue-cache) for the full command reference.
 
 ---
 

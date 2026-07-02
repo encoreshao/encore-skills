@@ -2,9 +2,16 @@
 """
 Local, merge-safe cache for GitLab data, layered by scope:
 
-  ~/.gitlab/cache/<instance>/users.json                       - instance-level user directory
-  ~/.gitlab/cache/<instance>/projects/<project>/project.json  - project-level metadata (incl. members)
-  ~/.gitlab/cache/<instance>/projects/<project>/issues/<iid>.json - issue-level issue + notes + our own annotations
+  ~/.gitlab/cache/<instance>/users.json                            - instance-level user directory
+  ~/.gitlab/cache/<instance>/groups/<group>/group.json             - group-level metadata (incl. members)
+  ~/.gitlab/cache/<instance>/projects/<project>/project.json       - project-level metadata, members, and our
+                                                                      own `_memory` (the docs/CONTEXT.md
+                                                                      equivalent for projects with no local clone)
+  ~/.gitlab/cache/<instance>/projects/<project>/issues/<iid>.json  - issue-level issue + notes + our own annotations
+
+A GitLab group can hold several projects (e.g. group `ekohe/kurrant` holds
+projects `kurrant.web` and `camp`) — group-level data is shared across all
+of them instead of being re-fetched and duplicated per project.
 
 Every write deep-merges onto whatever is already on disk. Nothing already
 cached is ever dropped or blindly overwritten - new data is layered on top,
@@ -83,7 +90,26 @@ def get_users(instance: str) -> Dict:
     return _read_json(_instance_dir(instance) / "users.json")
 
 
-# ---- Project-level: metadata and membership ----
+# ---- Group-level: metadata and membership, shared across the group's projects ----
+
+def _group_dir(instance: str, group_path: str) -> Path:
+    d = _instance_dir(instance) / "groups" / _sanitize(group_path)
+    d.mkdir(parents=True, exist_ok=True)
+    return d
+
+
+def upsert_group(instance: str, group_path: str, data: Dict) -> Dict:
+    path = _group_dir(instance, group_path) / "group.json"
+    merged = deep_merge(_read_json(path), data)
+    _write_json(path, merged)
+    return merged
+
+
+def get_group(instance: str, group_path: str) -> Dict:
+    return _read_json(_group_dir(instance, group_path) / "group.json")
+
+
+# ---- Project-level: metadata, membership, and our own project memory ----
 
 def upsert_project(instance: str, project_id: str, data: Dict) -> Dict:
     path = _project_dir(instance, project_id) / "project.json"
@@ -94,6 +120,19 @@ def upsert_project(instance: str, project_id: str, data: Dict) -> Dict:
 
 def get_project(instance: str, project_id: str) -> Dict:
     return _read_json(_project_dir(instance, project_id) / "project.json")
+
+
+def annotate_project(instance: str, project_id: str, key: str, value: Any) -> Dict:
+    """Record project-level engineering memory (solved issues, patterns,
+    gotchas) under `_memory` - the GitLab-cache equivalent of docs/CONTEXT.md,
+    for projects with no local codebase to hold it. Caller owns the value
+    (e.g. the full updated list of solved issues) - this just persists it,
+    same update-in-place discipline as docs/CONTEXT.md."""
+    path = _project_dir(instance, project_id) / "project.json"
+    cache = _read_json(path)
+    cache.setdefault('_memory', {})[key] = value
+    _write_json(path, cache)
+    return cache
 
 
 # ---- Issue-level: issue + notes + our own annotations ----
@@ -150,9 +189,11 @@ def main():
         print("\nRead-only (no network, no gitlab-config needed):", file=sys.stderr)
         print("  get-issue <instance> <project_id> <issue_iid>", file=sys.stderr)
         print("  get-users <instance>", file=sys.stderr)
+        print("  get-group <instance> <group_path>", file=sys.stderr)
         print("  get-project <instance> <project_id>", file=sys.stderr)
-        print("  annotate <instance> <project_id> <issue_iid> <key> <value>", file=sys.stderr)
-        print("\nNote: writes (sync-issue, sync-project) are driven from gitlab_api.py, not here.", file=sys.stderr)
+        print("  annotate-issue <instance> <project_id> <issue_iid> <key> <value>", file=sys.stderr)
+        print("  annotate-project <instance> <project_id> <key> <value>", file=sys.stderr)
+        print("\nNote: writes that hit the network (sync-issue, sync-project, sync-group) are driven from gitlab_api.py, not here.", file=sys.stderr)
         sys.exit(1)
 
     command = sys.argv[1]
@@ -164,10 +205,14 @@ def main():
                 return
         elif command == 'get-users':
             result = get_users(sys.argv[2])
+        elif command == 'get-group':
+            result = get_group(sys.argv[2], sys.argv[3])
         elif command == 'get-project':
             result = get_project(sys.argv[2], sys.argv[3])
-        elif command == 'annotate':
+        elif command == 'annotate-issue':
             result = annotate_issue(sys.argv[2], sys.argv[3], sys.argv[4], sys.argv[5], sys.argv[6])
+        elif command == 'annotate-project':
+            result = annotate_project(sys.argv[2], sys.argv[3], sys.argv[4], sys.argv[5])
         else:
             print(f"Unknown command: {command}", file=sys.stderr)
             sys.exit(1)

@@ -276,6 +276,14 @@ class GitLabAPI:
         """Get all members (direct + inherited) of a project — the team roster."""
         return self._request('GET', f"projects/{requests.utils.quote(project_id, safe='')}/members/all")
 
+    def get_group(self, group_id: str) -> Dict:
+        """Get group details — group_id can be the numeric id or the full path."""
+        return self._request('GET', f"groups/{requests.utils.quote(str(group_id), safe='')}")
+
+    def get_group_members(self, group_id: str) -> List[Dict]:
+        """Get all members (direct + inherited) of a group — shared across its projects."""
+        return self._request('GET', f"groups/{requests.utils.quote(str(group_id), safe='')}/members/all")
+
     def get_issue(self, project_id: str, issue_iid: int) -> Dict:
         """Get issue details including description and comments."""
         issue = self._request('GET', f"projects/{requests.utils.quote(project_id, safe='')}/issues/{issue_iid}")
@@ -380,7 +388,8 @@ def main():
         print("  get-diff <project> <mr_iid>                     - Get unified diff for MR", file=sys.stderr)
         print("  aggregate-issues <project> [days]               - Get issue statistics", file=sys.stderr)
         print("  sync-issue <project> <issue_iid>                - Fetch issue+notes and merge into the local cache", file=sys.stderr)
-        print("  sync-project <project>                          - Fetch project+members and merge into the local cache", file=sys.stderr)
+        print("  sync-project <project>                          - Fetch project+members (and its parent group) and merge into the local cache", file=sys.stderr)
+        print("  sync-group <group_path>                         - Fetch group+members and merge into the local cache", file=sys.stderr)
         print("  cached-issue <project> <issue_iid>               - Read the cached issue (no network call)", file=sys.stderr)
         print("\nOptions:", file=sys.stderr)
         print("  --instance=<name>  Specify which GitLab instance to use (from config file)", file=sys.stderr)
@@ -474,6 +483,21 @@ def main():
             fresh_project['members'] = api.get_project_members(project_id)
             result = gitlab_cache.upsert_project(api.instance_name, project_id, fresh_project)
             gitlab_cache.upsert_users(api.instance_name, fresh_project['members'])
+
+            namespace = fresh_project.get('namespace') or {}
+            if namespace.get('kind') == 'group':
+                group_path = namespace['full_path']
+                fresh_group = api.get_group(group_path)
+                fresh_group['members'] = api.get_group_members(group_path)
+                gitlab_cache.upsert_group(api.instance_name, group_path, fresh_group)
+                gitlab_cache.upsert_users(api.instance_name, fresh_group['members'])
+
+        elif command == 'sync-group':
+            group_path = args[1]
+            fresh_group = api.get_group(group_path)
+            fresh_group['members'] = api.get_group_members(group_path)
+            result = gitlab_cache.upsert_group(api.instance_name, group_path, fresh_group)
+            gitlab_cache.upsert_users(api.instance_name, fresh_group['members'])
 
         elif command == 'cached-issue':
             project_id, issue_iid = args[1], int(args[2])
