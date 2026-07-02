@@ -7,8 +7,10 @@ Versioning follows [Semantic Versioning](https://semver.org/).
 ## [Unreleased]
 
 ### Added
-- `triage-issue` skill — reads an issue's comment thread, decides which comments actually need your reply (tags you, or you're the assignee with an unanswered question), grounds the reply in the current codebase, and posts directly when it's clearly warranted or checks with you first when it's ambiguous.
+- `triage-issue` skill — reads an issue's comment thread, decides which comments actually need your reply (tags you, or you're the assignee with an unanswered question), grounds the reply in the current codebase, and posts directly when it's clearly warranted or checks with you first when it's ambiguous. Replies now match the length/format of the comment they answer instead of one fixed template, and non-trivial codebase digs delegate to a subagent.
 - `whoami` command to `gitlab_api.py` — fetches the authenticated GitLab user, used by `triage-issue` to detect self-mentions.
+- Local instance/project/issue cache (`gitlab_cache.py`) under `~/.gitlab/cache/` — `sync-issue` and `sync-project` commands merge fresh API data onto whatever's already cached (by note id for issues), so team rosters and issue history persist across runs instead of being refetched and rederived every time. `analyze-issue` and `triage-issue` now read/write it; see `gitlab-config` skill's "Local memory" section.
+- `create-mr` now checks the issue thread for related work already mentioned (prior MRs, commits, decisions) before drafting, and adds a "Related" section to the description when it finds any — so reviewers aren't missing context that was already posted.
 
 ### Changed
 - Renamed `workflow` skill to `eng-workflow` for clarity now that `pm-workflow` and `triage-issue` exist alongside it.

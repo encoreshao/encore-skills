@@ -33,17 +33,17 @@ Run this before writing a single line of code. The goal is to understand the *re
 - Issue number (`#42`) with project alias or path, GitLab URL, or paste the issue text
 
 ```bash
-# Preferred — supports multiple GitLab servers
+# Preferred — supports multiple GitLab servers, merges into the local cache
 GITLAB="$HOME/.claude/skills/gitlab-config/scripts/gitlab_api.py"
-python $GITLAB get-issue <project> <number>
-# e.g. python $GITLAB get-issue webapp 42
-# e.g. python $GITLAB --instance=personal get-issue blog 7
+python $GITLAB sync-issue <project> <number>
+# e.g. python $GITLAB sync-issue webapp 42
+# e.g. python $GITLAB --instance=personal sync-issue blog 7
 
 # Fallback with glab (single instance)
 glab issue view <number>
 ```
 
-See `gitlab-config` skill for first-time setup.
+See `gitlab-config` skill for first-time setup and the local-memory cache it maintains — a prior analysis you saved with `annotate` is worth checking before you redo the work.
 
 ## Before you start
 
@@ -138,6 +138,12 @@ What is the smallest, most targeted change that fixes the root cause?
 ### Ready to code? Yes / No
 ```
 
+Save it so re-analysis doesn't start from scratch next time:
+```bash
+CACHE="$HOME/.claude/skills/gitlab-config/scripts/gitlab_cache.py"
+python $CACHE annotate <instance> <project_id> <number> analysis "<root cause + approach, 2-3 sentences>"
+```
+
 ---
 
 ## Skill: `create-mr`
@@ -163,6 +169,17 @@ git log origin/$BASE..HEAD --oneline       # confirm what's going in
 glab pipeline status 2>/dev/null || true   # check CI
 ```
 
+## Check the issue thread for related work first
+
+Other people may have already posted context in the issue — a prior attempt, a linked commit, a related MR, a decision made in a comment. If your MR description doesn't mention it, reviewers re-derive context that already exists, or miss that something relevant already happened.
+
+```bash
+GITLAB="$HOME/.claude/skills/gitlab-config/scripts/gitlab_api.py"
+python $GITLAB sync-issue <project> <issue_iid>   # merges into the cache — see gitlab-config
+```
+
+Scan the returned `notes[]` for: other MRs (`!123`, "mentioned in merge request"), commits ("mentioned in commit `<sha>`"), other issues, or a comment stating a decision or a prior fix attempt. If you find any, list them — this becomes the MR's "Related" section below. If there's nothing, skip that section; don't invent context.
+
 ## Title
 
 One line. What was fixed or added — from the user's perspective, not the implementation's.
@@ -176,7 +193,7 @@ Not: `fix: add .downcase to auth query` — that's the how, not the what.
 
 ## Description
 
-Keep it to 3 sections. No more.
+Keep it to 3 sections, plus a 4th only if Step 1 found something. No more.
 
 ```markdown
 ## What and why
@@ -197,6 +214,11 @@ to understand a non-obvious decision, explain it here. Skip the obvious.>
 - [ ] Original problem reproduced and confirmed fixed
 - [ ] Tests pass
 - [ ] Manually tested: <what you did to verify>
+
+## Related
+<Only if the issue thread mentioned it — one line each, skip the section entirely otherwise>
+- Follows up on !<mr-number> — <why it wasn't enough / what changed>
+- Prior attempt in <commit-sha> — <why this MR differs>
 ```
 
 The `Closes #<number>` line goes at the top of the description so GitLab auto-links and auto-closes the issue on merge.
@@ -487,6 +509,30 @@ Config lookup order: `./gitlab_config.json` → `~/.gitlab/config.json` → skil
 
 Instance resolution: `--instance` flag → project's configured instance → `default`.
 
+## Local memory (instance / project / issue cache)
+
+Every other skill should prefer these over the plain `get-issue`/`get-project` calls above — they hit the API the same way, but merge the result into `~/.gitlab/cache/<instance>/...` instead of throwing it away. Nothing already cached is ever dropped; new data layers on top.
+
+```bash
+python $GITLAB sync-project <project>              # project metadata + team roster -> project.json, feeds users.json
+python $GITLAB sync-issue <project> <issue_iid>     # issue + notes, merged by note id -> issues/<iid>.json
+python $GITLAB cached-issue <project> <issue_iid>   # read the cache with no network call
+
+CACHE="$HOME/.claude/skills/gitlab-config/scripts/gitlab_cache.py"
+python $CACHE get-users <instance>                            # instance-level team/user directory
+python $CACHE get-project <instance> <project_id>              # project-level metadata
+python $CACHE annotate <instance> <project_id> <issue_iid> <key> <value>   # record your own analysis/notes against an issue
+```
+
+Why this exists: analysis, triage, and reply-drafting all re-read the same issue and the same team roster repeatedly. `sync-issue` still calls the API every time (so new comments are never missed) but merges onto the cached copy — so your own annotations (root cause, which comments you've already handled) survive, and you're not re-deriving what you already knew. `sync-project` builds the team directory once so usernames resolve to real names without a separate lookup per comment.
+
+Cache layout:
+```
+~/.gitlab/cache/<instance>/users.json                              # instance-level: every user seen, keyed by id
+~/.gitlab/cache/<instance>/projects/<project>/project.json         # project-level: metadata + members
+~/.gitlab/cache/<instance>/projects/<project>/issues/<iid>.json    # issue-level: issue + notes + your own `_notes` annotations
+```
+
 ## Troubleshooting
 
 | Error | Fix |
@@ -677,20 +723,23 @@ Reads an issue and its comment thread, figures out which comments genuinely need
 ```bash
 GITLAB="$HOME/.claude/skills/gitlab-config/scripts/gitlab_api.py"
 python $GITLAB whoami                            # confirm your username once per session
-python $GITLAB get-issue <project> <number>       # issue + full comment thread
+python $GITLAB sync-project <project>             # once per project — builds the team/user directory
+python $GITLAB sync-issue <project> <number>      # issue + full comment thread, merged into the cache
 ```
 
-See `gitlab-config` skill for first-time setup.
+See `gitlab-config` skill for first-time setup and the local-memory cache it maintains.
 
 ## Steps
 
 ### 1. Fetch the issue and comments
 
-`get-issue` returns the issue plus every note in `notes[]`, oldest-last. Each note has `author`, `body`, `system` (true = GitLab-generated, e.g. "assigned to @x" — never needs a reply), and `created_at`.
+Use `sync-issue`, not `get-issue` — same API call, but it merges onto whatever's already cached for this issue instead of discarding it, so any comment you've already handled (see Step 4) stays marked. It returns the issue plus every note in `notes[]`, oldest-last. Each note has `author`, `body`, `system` (true = GitLab-generated, e.g. "assigned to @x" — never needs a reply), and `created_at`.
+
+Resolve `@mentions` and author names against the cached team directory (`gitlab_cache.py get-users <instance>`) instead of guessing from the raw GitLab username — it's already built from `sync-project` and every issue you've synced.
 
 ### 2. Decide which comments need your reply
 
-Walk the notes in chronological order (reverse the array first — GitLab returns newest-first). Skip system notes and anything you authored. For everything else, a comment needs your reply if:
+Walk the notes in chronological order (reverse the array first — GitLab returns newest-first). Skip system notes, anything you authored, and any note id already listed in the cached `_notes.replied_note_ids` (see Step 4 — you've handled it in a prior run). For everything else, a comment needs your reply if:
 
 - It `@mentions` your username directly, **or**
 - You're the assignee, it asks a direct question or requests an action, and no later comment from you addresses it
@@ -723,11 +772,13 @@ Don't draft from the issue text alone. For each comment needing a reply:
 
 Then:
 
-- **Clearly needs reply** → draft the comment at the right size, then post it directly:
+- **Clearly needs reply** → draft the comment at the right size, post it, then record the note id so it's never re-flagged:
   ```bash
   python $GITLAB post-issue-comment <project> <number> "<reply>"
+  CACHE="$HOME/.claude/skills/gitlab-config/scripts/gitlab_cache.py"
+  python $CACHE annotate <instance> <project_id> <number> replied_note_ids '[<note_id>, ...]'
   ```
-- **Ambiguous** → show the draft and your reasoning, and ask before posting. Don't post ambiguous replies unprompted.
+- **Ambiguous** → show the draft and your reasoning, and ask before posting. Don't post ambiguous replies unprompted, and don't mark it replied until you actually post it.
 
 ### 5. Report
 

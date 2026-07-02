@@ -14,7 +14,7 @@ A portable workflow skills library for GitLab teams. Works across Claude Code, C
 
 | Skill | What it does |
 |-------|--------------|
-| [`gitlab-config`](skills/gitlab-config/SKILL.md) | Wire up GitLab API access — multiple instances, tokens, project aliases. Run once before anything else. |
+| [`gitlab-config`](skills/gitlab-config/SKILL.md) | Wire up GitLab API access — multiple instances, tokens, project aliases — plus a local instance/project/issue cache so other skills don't refetch what they already know. Run once before anything else. |
 
 ### PM / Designer loop
 
@@ -31,7 +31,7 @@ A portable workflow skills library for GitLab teams. Works across Claude Code, C
 | [`analyze-issue`](skills/analyze-issue/SKILL.md) | Read an issue, identify the root cause (not just symptoms), surface real risks, produce an implementation approach. |
 | [`fix-issue`](skills/fix-issue/SKILL.md) | Implement following the human-thinking loop — understand, plan, code, verify the problem is actually gone. |
 | [`review-code`](skills/review-code/SKILL.md) | Pre-MR self-review — problem solved first, then security, correctness, and code quality. |
-| [`create-mr`](skills/create-mr/SKILL.md) | Create a GitLab MR with a high-level summary that tells the reviewer what matters in 30 seconds. |
+| [`create-mr`](skills/create-mr/SKILL.md) | Create a GitLab MR with a high-level summary that tells the reviewer what matters in 30 seconds, and calls out related work already mentioned in the issue thread. |
 | [`triage-issue`](skills/triage-issue/SKILL.md) | Check an issue's comments for ones that need your reply, ground the reply in the actual codebase, post when it's clearly warranted. |
 | [`project-memory`](skills/project-memory/SKILL.md) | Record root cause, fix approach, and gotchas into `docs/CONTEXT.md` — so the next fix starts from knowledge, not a blank scan. |
 
@@ -135,6 +135,20 @@ python ~/.claude/skills/gitlab-config/scripts/gitlab_api.py list-instances
 ```
 
 > **Multiple GitLab servers?** Add more entries under `instances` — see [`skills/gitlab-config/SKILL.md`](skills/gitlab-config/SKILL.md) for multi-instance config.
+
+---
+
+## Local memory
+
+`gitlab-config` also maintains a local cache under `~/.gitlab/cache/`, layered by scope, so `analyze-issue`, `triage-issue`, and `create-mr` don't re-fetch or re-derive what they already know:
+
+```
+~/.gitlab/cache/<instance>/users.json                              # instance-level: every user seen (team directory)
+~/.gitlab/cache/<instance>/projects/<project>/project.json         # project-level: metadata + members
+~/.gitlab/cache/<instance>/projects/<project>/issues/<iid>.json    # issue-level: issue + notes + your own analysis
+```
+
+`sync-issue` and `sync-project` still call the GitLab API every time — new comments are never missed — but merge the result onto whatever's cached instead of discarding it, so nothing already known gets overwritten. See [`skills/gitlab-config/SKILL.md`](skills/gitlab-config/SKILL.md#local-memory-instance--project--issue-cache) for the full command reference.
 
 ---
 

@@ -15,6 +15,9 @@ from pathlib import Path
 from typing import Optional, Dict, List, Any
 from datetime import datetime
 
+sys.path.insert(0, str(Path(__file__).parent))
+import gitlab_cache
+
 
 def load_gitlab_config(instance_name: Optional[str] = None) -> tuple[str, str]:
     """
@@ -148,6 +151,18 @@ def resolve_project_alias(project_alias: str, instance_name: Optional[str] = Non
     return project_alias, instance_name
 
 
+def resolve_instance_name(instance_name: Optional[str] = None) -> str:
+    """Resolve the concrete instance name (never None) — needed as a cache key
+    since load_gitlab_config() resolves the default internally but doesn't
+    surface it back to the caller."""
+    if instance_name:
+        return instance_name
+    config = load_config()
+    if config and config.get('default'):
+        return config['default']
+    return os.environ.get('GITLAB_INSTANCE', 'default')
+
+
 def list_instances() -> None:
     """List all configured GitLab instances."""
     config_path = get_config_file()
@@ -225,6 +240,7 @@ class GitLabAPI:
     """GitLab API client for issues, merge requests, and comments."""
 
     def __init__(self, instance_name: Optional[str] = None):
+        self.instance_name = resolve_instance_name(instance_name)
         self.base_url, self.token = load_gitlab_config(instance_name)
 
         self.headers = {
@@ -255,6 +271,10 @@ class GitLabAPI:
     def get_project(self, project_id: str) -> Dict:
         """Get project details."""
         return self._request('GET', f"projects/{requests.utils.quote(project_id, safe='')}")
+
+    def get_project_members(self, project_id: str) -> List[Dict]:
+        """Get all members (direct + inherited) of a project — the team roster."""
+        return self._request('GET', f"projects/{requests.utils.quote(project_id, safe='')}/members/all")
 
     def get_issue(self, project_id: str, issue_iid: int) -> Dict:
         """Get issue details including description and comments."""
@@ -359,6 +379,9 @@ def main():
         print("  post-mr-comment <project> <mr_iid> <comment>", file=sys.stderr)
         print("  get-diff <project> <mr_iid>                     - Get unified diff for MR", file=sys.stderr)
         print("  aggregate-issues <project> [days]               - Get issue statistics", file=sys.stderr)
+        print("  sync-issue <project> <issue_iid>                - Fetch issue+notes and merge into the local cache", file=sys.stderr)
+        print("  sync-project <project>                          - Fetch project+members and merge into the local cache", file=sys.stderr)
+        print("  cached-issue <project> <issue_iid>               - Read the cached issue (no network call)", file=sys.stderr)
         print("\nOptions:", file=sys.stderr)
         print("  --instance=<name>  Specify which GitLab instance to use (from config file)", file=sys.stderr)
         print("\nNote: <project> can be a project alias (from config) or full project ID", file=sys.stderr)
@@ -439,6 +462,25 @@ def main():
             project_id = args[1]
             days = int(args[2]) if len(args) > 2 else 7
             result = api.list_project_issues_aggregate(project_id, days)
+
+        elif command == 'sync-issue':
+            project_id, issue_iid = args[1], int(args[2])
+            fresh_issue = api.get_issue(project_id, issue_iid)
+            result = gitlab_cache.sync_issue(api.instance_name, project_id, issue_iid, fresh_issue)
+
+        elif command == 'sync-project':
+            project_id = args[1]
+            fresh_project = api.get_project(project_id)
+            fresh_project['members'] = api.get_project_members(project_id)
+            result = gitlab_cache.upsert_project(api.instance_name, project_id, fresh_project)
+            gitlab_cache.upsert_users(api.instance_name, fresh_project['members'])
+
+        elif command == 'cached-issue':
+            project_id, issue_iid = args[1], int(args[2])
+            result = gitlab_cache.get_issue_cache(api.instance_name, project_id, issue_iid)
+            if result is None:
+                print(f"No cache for {project_id}#{issue_iid} — run sync-issue first", file=sys.stderr)
+                sys.exit(1)
 
         else:
             print(f"Unknown command: {command}", file=sys.stderr)

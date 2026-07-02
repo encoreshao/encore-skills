@@ -5,8 +5,8 @@ license: MIT
 compatibility: GitLab project access required. glab CLI optional. Local codebase optional — codebase analysis is skipped if none is available.
 metadata:
   author: encoreshao
-  version: "1.1"
-  tags: gitlab issue comments reply triage mention assignee engineer
+  version: "1.2"
+  tags: gitlab issue comments reply triage mention assignee engineer cache memory
 ---
 
 # Triage Issue
@@ -20,20 +20,23 @@ Reads an issue and its comment thread, figures out which comments genuinely need
 ```bash
 GITLAB="$HOME/.claude/skills/gitlab-config/scripts/gitlab_api.py"
 python $GITLAB whoami                            # confirm your username once per session
-python $GITLAB get-issue <project> <number>       # issue + full comment thread
+python $GITLAB sync-project <project>             # once per project — builds the team/user directory
+python $GITLAB sync-issue <project> <number>      # issue + full comment thread, merged into the cache
 ```
 
-See `gitlab-config` skill for first-time setup.
+See `gitlab-config` skill for first-time setup and the local-memory cache it maintains.
 
 ## Steps
 
 ### 1. Fetch the issue and comments
 
-`get-issue` returns the issue plus every note in `notes[]`, oldest-last. Each note has `author`, `body`, `system` (true = GitLab-generated, e.g. "assigned to @x" — never needs a reply), and `created_at`.
+Use `sync-issue`, not `get-issue` — same API call, but it merges onto whatever's already cached for this issue instead of discarding it, so any comment you've already handled (see Step 4) stays marked. It returns the issue plus every note in `notes[]`, oldest-last. Each note has `author`, `body`, `system` (true = GitLab-generated, e.g. "assigned to @x" — never needs a reply), and `created_at`.
+
+Resolve `@mentions` and author names against the cached team directory (`gitlab_cache.py get-users <instance>`) instead of guessing from the raw GitLab username — it's already built from `sync-project` and every issue you've synced.
 
 ### 2. Decide which comments need your reply
 
-Walk the notes in chronological order (reverse the array first — GitLab returns newest-first). Skip system notes and anything you authored. For everything else, a comment needs your reply if:
+Walk the notes in chronological order (reverse the array first — GitLab returns newest-first). Skip system notes, anything you authored, and any note id already listed in the cached `_notes.replied_note_ids` (see Step 4 — you've handled it in a prior run). For everything else, a comment needs your reply if:
 
 - It `@mentions` your username directly, **or**
 - You're the assignee, it asks a direct question or requests an action, and no later comment from you addresses it
@@ -66,11 +69,13 @@ Don't draft from the issue text alone. For each comment needing a reply:
 
 Then:
 
-- **Clearly needs reply** → draft the comment at the right size, then post it directly:
+- **Clearly needs reply** → draft the comment at the right size, post it, then record the note id so it's never re-flagged:
   ```bash
   python $GITLAB post-issue-comment <project> <number> "<reply>"
+  CACHE="$HOME/.claude/skills/gitlab-config/scripts/gitlab_cache.py"
+  python $CACHE annotate <instance> <project_id> <number> replied_note_ids '[<note_id>, ...]'
   ```
-- **Ambiguous** → show the draft and your reasoning, and ask before posting. Don't post ambiguous replies unprompted.
+- **Ambiguous** → show the draft and your reasoning, and ask before posting. Don't post ambiguous replies unprompted, and don't mark it replied until you actually post it.
 
 ### 5. Report
 

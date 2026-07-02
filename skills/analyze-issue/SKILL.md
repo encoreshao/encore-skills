@@ -5,8 +5,8 @@ license: MIT
 compatibility: GitLab project access required. glab CLI optional. git required.
 metadata:
   author: encoreshao
-  version: "1.2"
-  tags: gitlab issues analysis planning engineer pm root-cause
+  version: "1.3"
+  tags: gitlab issues analysis planning engineer pm root-cause cache memory
 ---
 
 # Analyze Issue
@@ -17,17 +17,17 @@ Run this before writing a single line of code. The goal is to understand the *re
 - Issue number (`#42`) with project alias or path, GitLab URL, or paste the issue text
 
 ```bash
-# Preferred — supports multiple GitLab servers
+# Preferred — supports multiple GitLab servers, merges into the local cache
 GITLAB="$HOME/.claude/skills/gitlab-config/scripts/gitlab_api.py"
-python $GITLAB get-issue <project> <number>
-# e.g. python $GITLAB get-issue webapp 42
-# e.g. python $GITLAB --instance=personal get-issue blog 7
+python $GITLAB sync-issue <project> <number>
+# e.g. python $GITLAB sync-issue webapp 42
+# e.g. python $GITLAB --instance=personal sync-issue blog 7
 
 # Fallback with glab (single instance)
 glab issue view <number>
 ```
 
-See `gitlab-config` skill for first-time setup.
+See `gitlab-config` skill for first-time setup and the local-memory cache it maintains — a prior analysis you saved with `annotate` is worth checking before you redo the work.
 
 ## Before you start
 
@@ -120,4 +120,10 @@ What is the smallest, most targeted change that fixes the root cause?
 - `path/to/file` — why
 
 ### Ready to code? Yes / No
+```
+
+Save it so re-analysis doesn't start from scratch next time:
+```bash
+CACHE="$HOME/.claude/skills/gitlab-config/scripts/gitlab_cache.py"
+python $CACHE annotate <instance> <project_id> <number> analysis "<root cause + approach, 2-3 sentences>"
 ```
