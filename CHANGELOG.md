@@ -15,6 +15,7 @@ Versioning follows [Semantic Versioning](https://semver.org/).
 ### Changed
 - Renamed `workflow` skill to `eng-workflow` for clarity now that `pm-workflow` and `triage-issue` exist alongside it.
 - `fix-issue` now checks the current branch and cuts a new one off `main`/`master`/`develop`/`staging`, named `<type>/<issue-number>-<func-name>`, recording the originating branch so `create-mr` can target the MR back to it instead of always assuming `main`.
+- `create-mr` titles must always include the issue number now: `<feature_type>: #<issue_number> <description>`. A title without one is a blocker, not something to draft around.
 
 ## [1.3.0] - 2026-07-01
 

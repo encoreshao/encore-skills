@@ -2,7 +2,7 @@
 
 ## Title
 ```
-fix: users with uppercase emails can now log in
+fix: #42 users with uppercase emails can now log in
 ```
 
 ## Description

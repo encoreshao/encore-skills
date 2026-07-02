@@ -5,7 +5,7 @@ license: MIT
 compatibility: git required. glab CLI optional. GitLab project access required.
 metadata:
   author: encoreshao
-  version: "1.3"
+  version: "1.4"
   tags: gitlab mr merge-request engineer workflow ship branch related-work
 ---
 
@@ -40,14 +40,16 @@ Scan the returned `notes[]` for: other MRs (`!123`, "mentioned in merge request"
 
 ## Title
 
-One line. What was fixed or added — from the user's perspective, not the implementation's.
+Format, always: `<feature_type>: #<issue_number> <description>`. The issue number is never optional — if there's no issue, that's a blocker, not a reason to drop it (see `write-issue`/`analyze-issue`).
+
+`<feature_type>` matches the commit convention: `feat`, `fix`, `refactor`, `test`, `chore`, `docs`. `<description>` is what was fixed or added — from the user's perspective, not the implementation's.
 
 ```
-fix: users with uppercase emails can now log in
-feat: CSV export on the reports page
+fix: #42 users with uppercase emails can now log in
+feat: #108 CSV export on the reports page
 ```
 
-Not: `fix: add .downcase to auth query` — that's the how, not the what.
+Not: `fix: add .downcase to auth query` (missing issue number, and describes the how, not the what). Not: `fix: users with uppercase emails can now log in` (missing issue number).
 
 ## Description
 
@@ -89,18 +91,18 @@ The `Closes #<number>` line goes at the top of the description so GitLab auto-li
 RESOLVE="$HOME/.claude/skills/gitlab-config/scripts/auto_resolve_issue.py"
 git push -u origin HEAD
 python $RESOLVE create-mr <project> <branch> auto \
-  "fix: <what was fixed>" \
+  "<feature_type>: #<issue-number> <what was fixed>" \
   "Closes #<issue-number>
 
 <2-3 sentence summary>" \
   <issue_iid>
 # e.g. python $RESOLVE create-mr webapp feat/42-fix-login auto \
-#   "fix: users with uppercase emails can now log in" \
+#   "fix: #42 users with uppercase emails can now log in" \
 #   "Closes #42\n\nNormalizes email input before DB lookup." 42
 
 # With glab (single instance)
 glab mr create \
-  --title "fix: <what was fixed>" \
+  --title "<feature_type>: #<issue-number> <what was fixed>" \
   --target-branch "$BASE" \
   --fill \
   --assignee @me \

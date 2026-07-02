@@ -26,7 +26,7 @@ Created issue #42: "Users cannot log in when email contains uppercase letters"
 - Verdict: Ready to merge
 
 ## Phase 4: Create MR (`create-mr`)
-MR !87 opened: "fix: users with uppercase emails can now log in"
+MR !87 opened: "fix: #42 users with uppercase emails can now log in"
 - Closes #42 in description
 - CI passing
 
