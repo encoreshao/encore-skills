@@ -5,7 +5,7 @@ license: MIT
 compatibility: GitLab project access required. glab CLI optional. Local codebase optional — codebase analysis is skipped if none is available.
 metadata:
   author: encoreshao
-  version: "1.0"
+  version: "1.1"
   tags: gitlab issue comments reply triage mention assignee engineer
 ---
 
@@ -50,13 +50,23 @@ If there's nothing needing a reply, say so and stop — don't invent a reason to
 ### 3. Ground the reply in the codebase
 
 Don't draft from the issue text alone. For each comment needing a reply:
-- Find the code the comment is actually about — `grep`, follow the call chain, check recent commits/MRs linked in the thread
+- A quick lookup (one file, one symbol) — `grep` it yourself inline
+- A real investigation (spans multiple files, root cause unclear, need to trace a call chain or check recent commits/MRs) — dispatch an agent (e.g. an `Explore` subagent) to do it. Keeps this skill's main thread on triage and drafting, not spelunking
 - Confirm current behavior before claiming it's fixed, broken, or unchanged
 - If there's no local codebase available, say so in the draft instead of guessing
 
 ### 4. Draft and act
 
-- **Clearly needs reply** → draft the comment, then post it directly:
+**Match the reply's length and format to the comment it answers — don't run every reply through the same template.**
+
+- A one-line question ("is this fixed?") gets a one-line answer ("Yes, fixed in prod — see `abc1234`."). Padding a yes/no into paragraphs is wrong, not thorough.
+- A multi-part question or a request with several asks gets a structured reply (short intro + bullets), one point per ask — no more.
+- A comment that's really a status update or FYI, not a question, may not need prose at all — a link or a single confirming line is enough.
+- Never add sections, disclaimers, or "let me know if you have questions" filler the comment didn't ask for.
+
+Then:
+
+- **Clearly needs reply** → draft the comment at the right size, then post it directly:
   ```bash
   python $GITLAB post-issue-comment <project> <number> "<reply>"
   ```
