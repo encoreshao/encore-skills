@@ -141,9 +141,21 @@ BRANCH=$(git branch --show-current)
 BASE=$(git config --local --get branch.$BRANCH.base || echo main)
 
 git fetch origin
+git status --porcelain             # anything uncommitted?
 git log origin/$BASE..HEAD --oneline       # confirm what's going in
 glab pipeline status 2>/dev/null || true   # check CI
 ```
+
+If `git status --porcelain` shows uncommitted changes, commit them before pushing — an MR should never leave work behind uncommitted. Follow `fix-issue`'s commit convention (one commit per logical concern):
+
+```bash
+git add <files>
+git commit -m "fix(scope): what was broken and how it's fixed
+
+Closes #<issue-number>"
+```
+
+Don't commit unrelated or leftover debug changes — if something in the working tree doesn't belong in this MR, that's a signal to stop and ask, not to bundle it in.
 
 ## Check the issue thread for related work first
 
