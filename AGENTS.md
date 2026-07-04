@@ -13,7 +13,6 @@ Invoke a skill by name when the task matches its description.
 | `fix-issue` | — | Implement a fix following the human-thinking loop — understand the root cause, plan the minimal change, implement, verify the problem is actually gone |
 | `gitlab-config` | — | Wire up GitLab API access — multiple instances, project aliases, tokens. Run this once before any other GitLab skill. |
 | `pm-workflow` | — | Full PM/designer loop — draft an issue, interact with users and stakeholders to validate it, refine until dev-ready, then finalize |
-| `project-memory` | — | Record what was learned fixing an issue into docs/CONTEXT.md — so the next analysis starts from knowledge, not a blank scan |
 | `review-code` | — | Pre-MR self-review — first confirm the problem is actually solved, then check for security, correctness, and simplicity |
 | `triage-issue` | — | Use when a GitLab issue has comments that might tag you or be waiting on your reply as assignee, and you need to decide what actually needs a response |
 | `write-issue` | — | Turn a rough idea into a well-structured GitLab issue with clear problem statement, root cause, and testable acceptance criteria |
@@ -44,29 +43,6 @@ glab issue view <number>
 ```
 
 See `gitlab-config` skill for first-time setup and the local-memory cache it maintains — a prior analysis you saved with `annotate-issue` is worth checking before you redo the work.
-
-## Before you start
-
-Load only what's relevant — don't dump all context into memory.
-
-```bash
-# 1. Discover what exists
-ls docs/CONTEXT.md 2>/dev/null && wc -l docs/CONTEXT.md
-ls docs/context/ 2>/dev/null
-
-# 2a. Single file under 100 lines — load whole file
-cat docs/CONTEXT.md
-
-# 2b. Single file over 100 lines — scan headers, then load relevant sections
-grep "^## " docs/CONTEXT.md
-awk '/^## Solved Issues/,/^## /' docs/CONTEXT.md
-
-# 2c. Directory — read index first, then only domain files that match this issue
-cat docs/context/index.md
-cat docs/context/<relevant-domain>.md   # only the domains that apply
-```
-
-Check **Solved Issues** for similar past fixes, **Patterns** for established approaches, **Gotchas** for known traps. If it's already documented, use it — don't re-derive it.
 
 ## Steps
 
@@ -282,10 +258,9 @@ Full development loop. The goal is not to merge an MR — it's to confirm the pr
 ## The loop
 
 ```
-write-issue → analyze-issue → fix-issue → review-code → create-mr → [merge] → project-memory
-      ↑            ↑ reads                                                           |
-      │       docs/CONTEXT.md                                                        ↓
-      └──────── new issue from feedback ─────────────────────── docs/CONTEXT.md grows smarter
+write-issue → analyze-issue → fix-issue → review-code → create-mr → [merge]
+      ↑                                                                 |
+      └──────────────────────── new issue from feedback ────────────────┘
 ```
 
 ## Entry points
@@ -353,7 +328,6 @@ Already on a non-protected feature branch? Keep working on it — don't create a
 
 Read the relevant code before writing a single line. You cannot fix what you don't understand.
 
-- Check `docs/CONTEXT.md` (or `docs/context/<domain>.md` for large projects) first — scan Solved Issues for similar past fixes and Patterns for established approaches before searching the codebase from scratch
 - Find the code involved: `grep`, file search, follow the call chain
 - Understand why the current behavior happens — confirm the root cause from the analysis
 - If the root cause turns out to be different from the analysis, stop and update the analysis
@@ -527,7 +501,7 @@ python $CACHE get-users <instance>                            # instance-level t
 python $CACHE get-group <instance> <group_path>               # group-level metadata + members
 python $CACHE get-project <instance> <project_id>              # project-level metadata
 python $CACHE annotate-issue <instance> <project_id> <issue_iid> <key> <value>     # record analysis/notes against an issue
-python $CACHE annotate-project <instance> <project_id> <key> <value>               # record project-wide memory (see project-memory)
+python $CACHE annotate-project <instance> <project_id> <key> <value>               # record project-wide memory
 ```
 
 Why this exists: analysis, triage, and reply-drafting all re-read the same issue and the same team roster repeatedly. `sync-issue` still calls the API every time (so new comments are never missed) but merges onto the cached copy — so your own annotations (root cause, which comments you've already handled) survive, and you're not re-deriving what you already knew. `sync-project` builds the team directory once so usernames resolve to real names without a separate lookup per comment.
@@ -579,41 +553,6 @@ write-issue → share → gather-feedback → synthesize → refine → validate
 | Issue drafted, not yet shared | Phase 2: Share |
 | Feedback collected, need to update issue | Phase 4: Synthesize |
 | Issue refined, checking if it's ready | Phase 5: Validate |
-
----
-
-## Skill: `project-memory`
-
-> Record what was learned fixing an issue into docs/CONTEXT.md — so the next analysis starts from knowledge, not a blank scan
-
-
-# Project Memory
-
-Every issue fix teaches you something about the codebase. Record it. The next session shouldn't have to rediscover the same root causes, the same patterns, the same traps. `docs/CONTEXT.md` (or `docs/context/` for large projects) is the living knowledge layer — it grows smarter with every resolved issue.
-
-Three modes: **discover** what context exists, **load** only what's relevant, **update** after merging.
-
-## Structure
-
-**Small to medium projects** — single file:
-
-```
-docs/CONTEXT.md
-```
-
-**Large projects** — split by domain into a directory:
-
-```
-docs/context/
-  index.md        ← overview + quick-reference table across all domains
-  auth.md
-  payments.md
-  api.md
-  background-jobs.md
-  <domain>.md     ← one file per major area of the codebase
-```
-
-Start with the single file. Split into a directory only when `CONTEXT.md` grows past ~150 lines or covers more than 4–5 clearly separate domains.
 
 ---
 

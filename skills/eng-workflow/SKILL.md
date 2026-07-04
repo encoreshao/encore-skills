@@ -5,7 +5,7 @@ license: MIT
 compatibility: git required. glab CLI optional. GitLab project access required.
 metadata:
   author: encoreshao
-  version: "1.4"
+  version: "1.5"
   tags: gitlab workflow engineer pm orchestrator full-loop branch
 ---
 
@@ -16,10 +16,9 @@ Full development loop. The goal is not to merge an MR — it's to confirm the pr
 ## The loop
 
 ```
-write-issue → analyze-issue → fix-issue → review-code → create-mr → [merge] → project-memory
-      ↑            ↑ reads                                                           |
-      │       docs/CONTEXT.md                                                        ↓
-      └──────── new issue from feedback ─────────────────────── docs/CONTEXT.md grows smarter
+write-issue → analyze-issue → fix-issue → review-code → create-mr → [merge]
+      ↑                                                                 |
+      └──────────────────────── new issue from feedback ────────────────┘
 ```
 
 ## Entry points
@@ -89,21 +88,6 @@ glab issue note <number> --message "Confirmed resolved in <env> after merge."
 ```
 
 If post-merge verification reveals the fix didn't work: reopen the issue, note what was tried and why it didn't work, and start the loop again from Phase 1 with better information.
-
----
-
-### Phase 6: Update project memory
-
-Use `project-memory`. Record what you learned: root cause, fix approach, key files, any gotchas. Takes 5 minutes. Makes the next analysis start from knowledge instead of a blank scan.
-
-```bash
-# Edit docs/CONTEXT.md (or docs/context/<domain>.md) in the project repo
-# Always update in place — keep it current, not append-only
-git add docs/CONTEXT.md        # or docs/context/
-git commit -m "chore: update project context after resolving #<N>"
-```
-
-**Gate:** CODEBASE.md updated and committed. The loop is now smarter than when it started.
 
 ## Principles
 

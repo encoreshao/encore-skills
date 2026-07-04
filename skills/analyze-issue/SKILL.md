@@ -5,8 +5,8 @@ license: MIT
 compatibility: GitLab project access required. glab CLI optional. git required.
 metadata:
   author: encoreshao
-  version: "1.3"
-  tags: gitlab issues analysis planning engineer pm root-cause cache memory
+  version: "1.4"
+  tags: gitlab issues analysis planning engineer pm root-cause cache
 ---
 
 # Analyze Issue
@@ -28,29 +28,6 @@ glab issue view <number>
 ```
 
 See `gitlab-config` skill for first-time setup and the local-memory cache it maintains — a prior analysis you saved with `annotate-issue` is worth checking before you redo the work.
-
-## Before you start
-
-Load only what's relevant — don't dump all context into memory.
-
-```bash
-# 1. Discover what exists
-ls docs/CONTEXT.md 2>/dev/null && wc -l docs/CONTEXT.md
-ls docs/context/ 2>/dev/null
-
-# 2a. Single file under 100 lines — load whole file
-cat docs/CONTEXT.md
-
-# 2b. Single file over 100 lines — scan headers, then load relevant sections
-grep "^## " docs/CONTEXT.md
-awk '/^## Solved Issues/,/^## /' docs/CONTEXT.md
-
-# 2c. Directory — read index first, then only domain files that match this issue
-cat docs/context/index.md
-cat docs/context/<relevant-domain>.md   # only the domains that apply
-```
-
-Check **Solved Issues** for similar past fixes, **Patterns** for established approaches, **Gotchas** for known traps. If it's already documented, use it — don't re-derive it.
 
 ## Steps
 

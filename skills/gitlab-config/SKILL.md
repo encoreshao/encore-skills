@@ -114,7 +114,7 @@ python $CACHE get-users <instance>                            # instance-level t
 python $CACHE get-group <instance> <group_path>               # group-level metadata + members
 python $CACHE get-project <instance> <project_id>              # project-level metadata
 python $CACHE annotate-issue <instance> <project_id> <issue_iid> <key> <value>     # record analysis/notes against an issue
-python $CACHE annotate-project <instance> <project_id> <key> <value>               # record project-wide memory (see project-memory)
+python $CACHE annotate-project <instance> <project_id> <key> <value>               # record project-wide memory
 ```
 
 Why this exists: analysis, triage, and reply-drafting all re-read the same issue and the same team roster repeatedly. `sync-issue` still calls the API every time (so new comments are never missed) but merges onto the cached copy — so your own annotations (root cause, which comments you've already handled) survive, and you're not re-deriving what you already knew. `sync-project` builds the team directory once so usernames resolve to real names without a separate lookup per comment.

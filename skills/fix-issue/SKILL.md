@@ -5,7 +5,7 @@ license: MIT
 compatibility: git required. Project test runner expected (any language).
 metadata:
   author: encoreshao
-  version: "1.3"
+  version: "1.4"
   tags: gitlab engineer implementation fix tdd root-cause workflow branch
 ---
 
@@ -48,7 +48,6 @@ Already on a non-protected feature branch? Keep working on it — don't create a
 
 Read the relevant code before writing a single line. You cannot fix what you don't understand.
 
-- Check `docs/CONTEXT.md` (or `docs/context/<domain>.md` for large projects) first — scan Solved Issues for similar past fixes and Patterns for established approaches before searching the codebase from scratch
 - Find the code involved: `grep`, file search, follow the call chain
 - Understand why the current behavior happens — confirm the root cause from the analysis
 - If the root cause turns out to be different from the analysis, stop and update the analysis

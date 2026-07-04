@@ -27,13 +27,12 @@ A portable workflow skills library for GitLab teams. Works across Claude Code, C
 
 | Skill | What it does |
 |-------|--------------|
-| [`eng-workflow`](skills/eng-workflow/SKILL.md) | Full engineer loop orchestrator — analyze → fix → review → MR → post-merge verify → update memory. |
+| [`eng-workflow`](skills/eng-workflow/SKILL.md) | Full engineer loop orchestrator — analyze → fix → review → MR → post-merge verify. |
 | [`analyze-issue`](skills/analyze-issue/SKILL.md) | Read an issue, identify the root cause (not just symptoms), surface real risks, produce an implementation approach. |
 | [`fix-issue`](skills/fix-issue/SKILL.md) | Implement following the human-thinking loop — understand, plan, code, verify the problem is actually gone. |
 | [`review-code`](skills/review-code/SKILL.md) | Pre-MR self-review — problem solved first, then security, correctness, and code quality. |
 | [`create-mr`](skills/create-mr/SKILL.md) | Create a GitLab MR with a high-level summary that tells the reviewer what matters in 30 seconds, and calls out related work already mentioned in the issue thread. |
 | [`triage-issue`](skills/triage-issue/SKILL.md) | Check an issue's comments for ones that need your reply, ground the reply in the actual codebase, draft it in your voice — always shown for approval before it's posted. |
-| [`project-memory`](skills/project-memory/SKILL.md) | Record root cause, fix approach, and gotchas into `docs/CONTEXT.md` — so the next fix starts from knowledge, not a blank scan. |
 
 ---
 
@@ -192,13 +191,10 @@ write-issue → share → gather-feedback → refine → validate → finalize
 
 Done when an engineer can pick up the issue and start without asking a single clarifying question.
 
-### Engineer — full loop with memory
+### Engineer — full loop
 
 ```
-analyze-issue → fix-issue → review-code → create-mr → [merge] → project-memory
-      ↑ reads                                                           |
- docs/CONTEXT.md                                                        ↓
-      └──────────────────────────────────── docs/CONTEXT.md grows smarter each cycle
+analyze-issue → fix-issue → review-code → create-mr → [merge]
 ```
 
 Each cycle follows the same thinking: **Understand → Plan → Implement → Validate → Ship or loop.**
