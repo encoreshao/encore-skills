@@ -42,5 +42,18 @@ MDC
   echo "  ✓ $skill_name → .cursor/rules/${skill_name}.mdc"
 done
 
+# Prune rule files for skills that no longer exist in the source (e.g. removed skills)
+pruned=0
+shopt -s nullglob
+for target in "$TARGET_DIR"/*.mdc; do
+  skill_name="$(basename "$target" .mdc)"
+  if [ ! -d "$SKILLS_DIR/$skill_name" ]; then
+    rm "$target"
+    echo "  ✗ $skill_name.mdc (removed from source, pruned)"
+    ((pruned++)) || true
+  fi
+done
+shopt -u nullglob
+
 echo ""
-echo "Done. Restart Cursor to pick up new rules."
+echo "Done. $pruned pruned. Restart Cursor to pick up new rules."

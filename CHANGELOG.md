@@ -9,6 +9,9 @@ Versioning follows [Semantic Versioning](https://semver.org/).
 ### Removed
 - `project-memory` skill and its `docs/CONTEXT.md` workflow — `analyze-issue`, `fix-issue`, and `eng-workflow` no longer reference it.
 
+### Fixed
+- `setup-claude.sh` and `setup-cursor.sh` now prune symlinks/rule files for skills removed from `skills/` instead of leaving dangling references after `--upgrade`.
+
 ### Added
 - `triage-issue` skill — reads an issue's comment thread, decides which comments actually need your reply (tags you, or you're the assignee with an unanswered question), grounds the reply in the current codebase, drafts it in your own voice, and always shows it to you for approval before posting. Replies match the length/format of the comment they answer instead of one fixed template, and non-trivial codebase digs delegate to a subagent.
 - `whoami` command to `gitlab_api.py` — fetches the authenticated GitLab user, used by `triage-issue` to detect self-mentions.
