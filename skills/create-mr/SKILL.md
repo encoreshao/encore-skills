@@ -2,11 +2,11 @@
 name: create-mr
 description: Create a GitLab Merge Request — clear title, high-level summary of what was changed and why, explicit confirmation the issue is resolved
 license: MIT
-compatibility: git required. glab CLI optional. GitLab project access required.
+compatibility: git required. glab CLI recommended (default path). API script is the fallback.
 metadata:
   author: encoreshao
-  version: "1.5"
-  tags: gitlab mr merge-request engineer workflow ship branch related-work
+  version: "1.7"
+  tags: gitlab mr merge-request engineer workflow ship branch related-work glab fallback
 ---
 
 # Create MR
@@ -97,8 +97,43 @@ The `Closes #<number>` line goes at the top of the description so GitLab auto-li
 
 ## Create
 
+Default to `glab` — create the MR directly with `git`, no API token required. Never use `--fill` — it pulls the title/description from raw commit messages and skips the structured summary the reviewer needs. Build the description from the Description template above (as real markdown — headings, the `Closes #` line, the checklist) and pass it explicitly:
+
 ```bash
-# Preferred — API script (supports multiple GitLab servers)
+# 1. Default — glab CLI
+git push -u origin HEAD
+
+DESCRIPTION=$(cat <<'EOF'
+## What and why
+
+Closes #<issue-number>
+
+<2–3 sentences: what problem this solves and whether it's fixed.>
+
+## How
+
+<1–2 sentences on the approach.>
+
+## Verified
+
+- [x] Original problem reproduced and confirmed fixed
+- [x] Tests pass
+- [x] Manually tested: <what you did to verify>
+EOF
+)
+
+glab mr create \
+  --title "<feature_type>: #<issue-number> <what was fixed>" \
+  --description "$DESCRIPTION" \
+  --target-branch "$BASE" \
+  --assignee @me \
+  --remove-source-branch
+```
+
+If `glab` isn't installed or isn't authenticated for this instance, fall back to the API script (useful for multi-instance setups already configured in `gitlab-config`, or when the API token has write access but `glab auth status` doesn't):
+
+```bash
+# 2. Fallback — API script (supports multiple GitLab servers)
 # target "auto" resolves to the branch you branched from, falling back to main
 RESOLVE="$HOME/.claude/skills/gitlab-config/scripts/auto_resolve_issue.py"
 git push -u origin HEAD
@@ -111,18 +146,14 @@ python $RESOLVE create-mr <project> <branch> auto \
 # e.g. python $RESOLVE create-mr webapp feat/42-fix-login auto \
 #   "fix: #42 users with uppercase emails can now log in" \
 #   "Closes #42\n\nNormalizes email input before DB lookup." 42
+```
 
-# With glab (single instance)
-glab mr create \
-  --title "<feature_type>: #<issue-number> <what was fixed>" \
-  --target-branch "$BASE" \
-  --fill \
-  --assignee @me \
-  --remove-source-branch
+If the API script also fails with a permission/scope error (`403`, `insufficient_scope`, `Forbidden`), that confirms the token lacks write access — don't retry it, drop back to `glab` (step 1). If neither `glab` nor the API script works, fall back to manual:
 
-# Without glab (manual)
+```bash
+# 3. Last resort — no glab, no working API token (manual)
 git push -u origin HEAD
-# Open the URL GitLab prints, paste the description above
+# Open the URL GitLab prints, paste the markdown description above
 ```
 
 ## After creating
