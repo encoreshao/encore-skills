@@ -6,6 +6,12 @@ Versioning follows [Semantic Versioning](https://semver.org/).
 
 ## [Unreleased]
 
+### Added
+- `summarize-issue` skill — once an issue is fixed and its MR exists, writes a high-level markdown recap (Summary / Root cause / Changes / Verified / MR) grounded in the actual issue, MR, and commits, and posts it as an issue comment. Fuller than `create-mr`'s one-line "Fixed in !123" note.
+
+### Changed
+- `triage-issue` description widened to lead with "replying to comments on a GitLab issue" so it triggers on a direct ask to reply, not only when triaging a whole thread.
+
 ### Removed
 - `project-memory` skill and its `docs/CONTEXT.md` workflow — `analyze-issue`, `fix-issue`, and `eng-workflow` no longer reference it.
 

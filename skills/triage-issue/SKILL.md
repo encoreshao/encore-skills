@@ -5,7 +5,7 @@ license: MIT
 compatibility: GitLab project access required. glab CLI optional. Local codebase optional — codebase analysis is skipped if none is available.
 metadata:
   author: encoreshao
-  version: "1.3"
+  version: "1.4"
   tags: gitlab issue comments reply triage mention assignee engineer cache memory
 ---
 

@@ -32,7 +32,8 @@ A portable workflow skills library for GitLab teams. Works across Claude Code, C
 | [`fix-issue`](skills/fix-issue/SKILL.md) | Implement following the human-thinking loop — understand, plan, code, verify the problem is actually gone. |
 | [`review-code`](skills/review-code/SKILL.md) | Pre-MR self-review — problem solved first, then security, correctness, and code quality. |
 | [`create-mr`](skills/create-mr/SKILL.md) | Create a GitLab MR with a high-level summary that tells the reviewer what matters in 30 seconds, and calls out related work already mentioned in the issue thread. |
-| [`triage-issue`](skills/triage-issue/SKILL.md) | Check an issue's comments for ones that need your reply, ground the reply in the actual codebase, draft it in your voice — always shown for approval before it's posted. |
+| [`summarize-issue`](skills/summarize-issue/SKILL.md) | Once an issue is fixed and its MR exists, post a high-level markdown recap as an issue comment — fuller than `create-mr`'s one-line note. |
+| [`triage-issue`](skills/triage-issue/SKILL.md) | Reply to an issue's comments — check which ones need a reply, ground the reply in the actual codebase, draft it in your voice — always shown for approval before it's posted. |
 
 ---
 
@@ -139,7 +140,7 @@ python ~/.claude/skills/gitlab-config/scripts/gitlab_api.py list-instances
 
 ## Local memory
 
-`gitlab-config` also maintains a local cache under `~/.gitlab/cache/`, layered by scope, so `analyze-issue`, `triage-issue`, and `create-mr` don't re-fetch or re-derive what they already know:
+`gitlab-config` also maintains a local cache under `~/.gitlab/cache/`, layered by scope, so `analyze-issue`, `triage-issue`, `create-mr`, and `summarize-issue` don't re-fetch or re-derive what they already know:
 
 ```
 ~/.gitlab/cache/<instance>/users.json                              # instance-level: every user seen (team directory)
