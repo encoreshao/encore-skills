@@ -1,6 +1,6 @@
 ---
 name: eng-workflow
-description: Full GitLab development loop — from issue to confirmed-resolved. Covers write-issue, analyze-issue, fix-issue, review-code, create-mr, triage-issue, and post-merge verification.
+description: Full GitLab development loop — from issue to confirmed-resolved. Covers write-issue, analyze-issue, fix-issue, review-code, create-mr, summarize-issue, triage-issue, and post-merge verification.
 license: MIT
 compatibility: git required. glab CLI optional. GitLab project access required.
 metadata:
@@ -29,6 +29,7 @@ write-issue → analyze-issue → fix-issue → review-code → create-mr → [m
 | Have a GitLab issue | `analyze-issue` |
 | Have an analysis, ready to code | `fix-issue` |
 | Code done, ready to ship | `review-code` |
+| Issue fixed, MR open, want a summary posted to the issue | `summarize-issue` |
 | Issue has comments that may need your reply | `triage-issue` |
 
 ## Phase guide
@@ -71,6 +72,12 @@ Use `review-code`. Start by asking: does this actually solve the problem from th
 Use `create-mr`. It targets the branch you branched from (recorded in Phase 2), not always `main`. Write a description that tells reviewers what problem was solved and whether it's fixed — in plain language, not a file list.
 
 **Gate:** MR is open, targets the right base branch, CI is passing, description links to the issue.
+
+---
+
+### Optional: Summarize on the issue
+
+If the user asks for a recap on the issue itself (beyond `create-mr`'s one-line "Fixed in !123" note), use `summarize-issue`. High-level, markdown, no diff dump — written for someone who won't read the code.
 
 ---
 

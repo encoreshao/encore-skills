@@ -1,6 +1,6 @@
 ---
 name: triage-issue
-description: Use when a GitLab issue has comments that might tag you or be waiting on your reply as assignee, and you need to decide what actually needs a response
+description: Use when replying to comments on a GitLab issue, or when an issue has comments that might tag you or be waiting on your reply as assignee — figures out which comments genuinely need a response, drafts each reply grounded in the codebase, and posts after you confirm
 license: MIT
 compatibility: GitLab project access required. glab CLI optional. Local codebase optional — codebase analysis is skipped if none is available.
 metadata:
