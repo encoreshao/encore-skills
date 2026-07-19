@@ -1,0 +1,7 @@
+---
+description: Full GitLab development loop — from issue to confirmed-resolved. Covers write-issue, analyze-issue, fix-issue, review-code, create-mr, summarize-issue, triage-issue, and post-merge verification.
+globs: []
+alwaysApply: false
+---
+
+@skills/eng-workflow/SKILL.md

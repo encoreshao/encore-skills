@@ -1,0 +1,7 @@
+---
+description: Turn a rough idea into a well-structured GitLab issue with clear problem statement, root cause, and testable acceptance criteria
+globs: []
+alwaysApply: false
+---
+
+@skills/write-issue/SKILL.md

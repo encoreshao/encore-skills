@@ -1,0 +1,7 @@
+---
+description: Create a GitLab Merge Request — clear title, high-level summary of what was changed and why, explicit confirmation the issue is resolved
+globs: []
+alwaysApply: false
+---
+
+@skills/create-mr/SKILL.md

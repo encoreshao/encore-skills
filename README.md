@@ -8,6 +8,31 @@ A portable workflow skills library for GitLab teams. Works across Claude Code, C
 
 ---
 
+## Who it's for
+
+- **Engineers** on a GitLab-based team who want an AI agent to carry an issue from analysis through a mergeable MR, without skipping root-cause analysis or self-review.
+- **PMs and designers** who want to turn a rough idea into a dev-ready GitLab issue — no codebase access required.
+- **Anyone using more than one AI coding tool** (e.g. Claude Code at the terminal, Cursor in the IDE, Codex in CI) who wants the same workflow behavior in all of them instead of maintaining separate prompts per tool.
+
+If your team isn't on GitLab, the loop structure (`analyze → fix → review → ship`) still applies, but the GitLab-specific skills (`gitlab-config`, `create-mr`, `triage-issue`, `summarize-issue`) won't have anywhere to talk to.
+
+---
+
+## Table of Contents
+
+- [Who it's for](#who-its-for)
+- [Skills](#skills)
+- [Install](#install)
+- [Configure GitLab](#configure-gitlab)
+- [Local memory](#local-memory)
+- [Uninstall](#uninstall)
+- [Workflows](#workflows)
+- [Requirements](#requirements)
+- [Contributing](#contributing)
+- [License](#license)
+
+---
+
 ## Skills
 
 ### Setup
@@ -55,12 +80,11 @@ Restart Claude Code (CLI, Desktop, or IDE extension) after install.
 
 ### Cursor
 
-Installs per-project into `.cursor/rules/`. Run inside your project directory.
+Installs per-project into `.cursor/rules/`. Run inside your project directory — the same one-liner as Claude Code, just with a different flag.
 
 ```bash
-git clone https://github.com/encoreshao/encore-skills.git ~/.encore-skills
 cd /your/project
-bash ~/.encore-skills/scripts/setup.sh --cursor
+curl -fsSL https://raw.githubusercontent.com/encoreshao/encore-skills/main/scripts/setup.sh | bash -s -- --cursor
 ```
 
 Restart Cursor after install.
@@ -70,16 +94,17 @@ Restart Cursor after install.
 Generates an `AGENTS.md` file in the current project directory. Run inside your project.
 
 ```bash
-git clone https://github.com/encoreshao/encore-skills.git ~/.encore-skills
 cd /your/project
-bash ~/.encore-skills/scripts/setup.sh --codex
+curl -fsSL https://raw.githubusercontent.com/encoreshao/encore-skills/main/scripts/setup.sh | bash -s -- --codex
 ```
 
 ### All tools at once
 
 ```bash
-bash ~/.encore-skills/scripts/setup.sh --all
+curl -fsSL https://raw.githubusercontent.com/encoreshao/encore-skills/main/scripts/setup.sh | bash -s -- --all
 ```
+
+Every one-liner above clones (or updates, if already present) a checkout to `~/.encore-skills` automatically — no manual `git clone` step needed for any tool. Re-run the same one-liner any time to upgrade.
 
 ---
 
@@ -107,8 +132,10 @@ run the gitlab-config skill to set up my GitLab access
 
 ### Manual setup
 
+Works regardless of which tool(s) you installed — `~/.encore-skills` is created by every install path above.
+
 ```bash
-cp ~/.claude/skills/gitlab-config/gitlab_config.json.template ~/.gitlab/config.json
+cp ~/.encore-skills/skills/gitlab-config/gitlab_config.json.template ~/.gitlab/config.json
 chmod 600 ~/.gitlab/config.json
 ```
 
@@ -131,7 +158,7 @@ Get a token: **GitLab → Settings → Access Tokens** — create with `api` sco
 Verify it works:
 
 ```bash
-python ~/.claude/skills/gitlab-config/scripts/gitlab_api.py list-instances
+python ~/.encore-skills/skills/gitlab-config/scripts/gitlab_api.py list-instances
 ```
 
 > **Multiple GitLab servers?** Add more entries under `instances` — see [`skills/gitlab-config/SKILL.md`](skills/gitlab-config/SKILL.md) for multi-instance config.
@@ -157,26 +184,30 @@ A GitLab group can hold several projects (e.g. group `ekohe/kurrant` holds `kurr
 
 ## Uninstall
 
+Every install path above sets up `~/.encore-skills` — run the uninstaller from there. For Cursor/Codex, run it from inside the project you installed into (per-project `.cursor/rules/` and `AGENTS.md` are removed relative to your current directory).
+
 ```bash
 # Remove from Claude Code / Claude Desktop
-./scripts/uninstall.sh --claude
+~/.encore-skills/scripts/uninstall.sh --claude
 
-# Remove from Cursor (current project)
-./scripts/uninstall.sh --cursor
+# Remove from Cursor (run inside the project)
+~/.encore-skills/scripts/uninstall.sh --cursor
 
-# Remove from Codex (current project)
-./scripts/uninstall.sh --codex
+# Remove from Codex (run inside the project)
+~/.encore-skills/scripts/uninstall.sh --codex
 
 # Remove from all tools
-./scripts/uninstall.sh --all
+~/.encore-skills/scripts/uninstall.sh --all
 ```
 
 Or via the setup entry point:
 
 ```bash
-./scripts/setup.sh --uninstall --claude
-./scripts/setup.sh --uninstall --all
+~/.encore-skills/scripts/setup.sh --uninstall --claude
+~/.encore-skills/scripts/setup.sh --uninstall --all
 ```
+
+(If you're working from a local clone of this repo instead, use `./scripts/...` relative to the repo root.)
 
 ---
 
@@ -223,6 +254,15 @@ See [CONTRIBUTING.md](CONTRIBUTING.md) for how to add or edit skills, frontmatte
 # Validate all skill frontmatter locally
 .github/scripts/validate-skills.sh
 ```
+
+This repo dogfoods itself — `CLAUDE.md`, `AGENTS.md`, and `.cursor/rules/*.mdc` at the repo root let Claude Code, Codex, and Cursor use these same skills while you work on this repo. `skills/` stays the single source of truth; after adding or editing a skill, regenerate the adapters:
+
+```bash
+./scripts/setup-cursor.sh   # refreshes .cursor/rules/*.mdc
+./scripts/setup-codex.sh    # refreshes AGENTS.md
+```
+
+Commit the regenerated files alongside your skill change.
 
 ---
 

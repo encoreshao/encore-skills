@@ -1,0 +1,7 @@
+---
+description: Pre-MR self-review — first confirm the problem is actually solved, then check for security, correctness, and simplicity
+globs: []
+alwaysApply: false
+---
+
+@skills/review-code/SKILL.md

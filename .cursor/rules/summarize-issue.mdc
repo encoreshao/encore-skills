@@ -1,0 +1,7 @@
+---
+description: After an issue is fixed and its MR is created, summarize the work in high-level markdown and post it as a comment on the GitLab issue
+globs: []
+alwaysApply: false
+---
+
+@skills/summarize-issue/SKILL.md

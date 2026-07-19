@@ -1,0 +1,7 @@
+---
+description: Wire up GitLab API access — multiple instances, project aliases, tokens. Run this once before any other GitLab skill.
+globs: []
+alwaysApply: false
+---
+
+@skills/gitlab-config/SKILL.md

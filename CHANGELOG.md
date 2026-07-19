@@ -6,6 +6,12 @@ Versioning follows [Semantic Versioning](https://semver.org/).
 
 ## [Unreleased]
 
+### Fixed
+- README: Cursor and Codex install docs now use the same one-line curl install as Claude Code instead of a manual `git clone` step (the setup script already self-clones to `~/.encore-skills` on first run regardless of tool flag).
+- README: GitLab manual-setup and uninstall commands now reference `~/.encore-skills/...` instead of `~/.claude/skills/...` or a bare `./scripts/...`, since those paths only exist for Claude-only installs or a local repo checkout.
+- `setup-codex.sh`: manual GitLab fallback instructions pointed at `~/.claude/skills/gitlab-config/...`, which doesn't exist for a Codex-only install — now points at `~/.encore-skills/skills/gitlab-config/...`.
+- `setup-cursor.sh`: now prints the same "Next: configure GitLab access" guidance as `setup-claude.sh` and `setup-codex.sh` — previously Cursor installs ended silently with no pointer to `gitlab-config`.
+
 ### Added
 - `summarize-issue` skill — once an issue is fixed and its MR exists, writes a high-level markdown recap (Summary / Root cause / Changes / Verified / MR) grounded in the actual issue, MR, and commits, and posts it as an issue comment. Fuller than `create-mr`'s one-line "Fixed in !123" note.
 

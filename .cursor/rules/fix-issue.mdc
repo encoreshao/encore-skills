@@ -1,0 +1,7 @@
+---
+description: Implement a fix following the human-thinking loop — understand the root cause, plan the minimal change, implement, verify the problem is actually gone
+globs: []
+alwaysApply: false
+---
+
+@skills/fix-issue/SKILL.md

@@ -1,0 +1,7 @@
+---
+description: Read a GitLab issue, identify the root cause (not just symptoms), surface real risks, and produce an implementation approach before writing any code
+globs: []
+alwaysApply: false
+---
+
+@skills/analyze-issue/SKILL.md

@@ -20,8 +20,9 @@ metadata:
 
 3. Add `examples/<scenario>.md` — at least one concrete input → output example
 4. Run `./scripts/setup.sh --claude` to test locally
-5. Update `CHANGELOG.md` under `[Unreleased]`
-6. Open an MR — the PR template will guide you
+5. Run `./scripts/setup-cursor.sh` and `./scripts/setup-codex.sh` to regenerate `.cursor/rules/*.mdc` and `AGENTS.md`, and commit the results — this repo dogfoods its own skills for Cursor and Codex, so a new skill isn't usable there until these adapters are regenerated
+6. Update `CHANGELOG.md` under `[Unreleased]`
+7. Open an MR — the PR template will guide you
 
 ## Editing an existing skill
 
