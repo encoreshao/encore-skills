@@ -176,7 +176,7 @@ python ~/.encore-skills/skills/gitlab-config/scripts/gitlab_api.py list-instance
 ~/.gitlab/cache/<instance>/projects/<project>/issues/<iid>.json    # issue-level: issue + notes + your own analysis
 ```
 
-A GitLab group can hold several projects (e.g. group `ekohe/kurrant` holds `kurrant.web` and `camp`) — `sync-project` detects the parent group and syncs it too, so the team roster is fetched once and shared across every project under it.
+A GitLab group can hold several projects (e.g. group `acme/rocket` holds `rocket-web` and `rocket-mobile`) — `sync-project` detects the parent group and syncs it too, so the team roster is fetched once and shared across every project under it.
 
 `sync-issue`, `sync-project`, and `sync-group` still call the GitLab API every time — new comments are never missed — but merge the result onto whatever's cached instead of discarding it, so nothing already known gets overwritten. See [`skills/gitlab-config/SKILL.md`](skills/gitlab-config/SKILL.md#local-memory-instance--group--project--issue-cache) for the full command reference.
 

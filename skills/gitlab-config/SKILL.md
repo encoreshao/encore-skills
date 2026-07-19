@@ -119,7 +119,7 @@ python $CACHE annotate-project <instance> <project_id> <key> <value>            
 
 Why this exists: analysis, triage, and reply-drafting all re-read the same issue and the same team roster repeatedly. `sync-issue` still calls the API every time (so new comments are never missed) but merges onto the cached copy — so your own annotations (root cause, which comments you've already handled) survive, and you're not re-deriving what you already knew. `sync-project` builds the team directory once so usernames resolve to real names without a separate lookup per comment.
 
-A GitLab **group** can hold several projects — e.g. group `ekohe/kurrant` holds projects `kurrant.web` and `camp`. `sync-project` automatically syncs the parent group too (detected from the project's `namespace`), so the group's roster and metadata are fetched once and shared across every project under it instead of being duplicated per project.
+A GitLab **group** can hold several projects — e.g. group `acme/rocket` holds projects `rocket-web` and `rocket-mobile`. `sync-project` automatically syncs the parent group too (detected from the project's `namespace`), so the group's roster and metadata are fetched once and shared across every project under it instead of being duplicated per project.
 
 Cache layout:
 ```

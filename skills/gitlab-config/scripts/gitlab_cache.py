@@ -9,8 +9,8 @@ Local, merge-safe cache for GitLab data, layered by scope:
                                                                       equivalent for projects with no local clone)
   ~/.gitlab/cache/<instance>/projects/<project>/issues/<iid>.json  - issue-level issue + notes + our own annotations
 
-A GitLab group can hold several projects (e.g. group `ekohe/kurrant` holds
-projects `kurrant.web` and `camp`) — group-level data is shared across all
+A GitLab group can hold several projects (e.g. group `acme/rocket` holds
+projects `rocket-web` and `rocket-mobile`) — group-level data is shared across all
 of them instead of being re-fetched and duplicated per project.
 
 Every write deep-merges onto whatever is already on disk. Nothing already
