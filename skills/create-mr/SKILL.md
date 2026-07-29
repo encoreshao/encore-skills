@@ -5,7 +5,7 @@ license: MIT
 compatibility: git required. glab CLI recommended (default path). API script is the fallback.
 metadata:
   author: encoreshao
-  version: "1.7"
+  version: "1.8"
   tags: gitlab mr merge-request engineer workflow ship branch related-work glab fallback
 ---
 
@@ -65,21 +65,20 @@ Not: `fix: add .downcase to auth query` (missing issue number, and describes the
 
 ## Description
 
-Keep it to 3 sections, plus a 4th only if Step 1 found something. No more.
+Keep it to 3 sections, plus a 4th only if Step 1 found something. No more. Every section is bullets, not prose — a reviewer should get each section's key point in the time it takes to scan, not read.
 
 ```markdown
 ## What and why
 
 Closes #<issue-number>
 
-<2–3 sentences: what problem does this solve, and does it solve it? 
-State this clearly. The reviewer needs to know if the goal was achieved — 
-not just what files changed.>
+- Problem: <what was broken or missing, from the user's perspective — not the code's>
+- Fix: <what changed to solve it>
+- Result: <confirms it's actually fixed, not just "should work now">
 
 ## How
 
-<1–2 sentences on the approach. High-level only. If the reviewer needs 
-to understand a non-obvious decision, explain it here. Skip the obvious.>
+- <one bullet per non-obvious decision — skip anything a reviewer would find obvious from the diff>
 
 ## Verified
 
@@ -108,11 +107,13 @@ DESCRIPTION=$(cat <<'EOF'
 
 Closes #<issue-number>
 
-<2–3 sentences: what problem this solves and whether it's fixed.>
+- Problem: <what was broken or missing>
+- Fix: <what changed to solve it>
+- Result: <confirms it's actually fixed>
 
 ## How
 
-<1–2 sentences on the approach.>
+- <one bullet per non-obvious decision>
 
 ## Verified
 
@@ -141,11 +142,12 @@ python $RESOLVE create-mr <project> <branch> auto \
   "<feature_type>: #<issue-number> <what was fixed>" \
   "Closes #<issue-number>
 
-<2-3 sentence summary>" \
+- Problem: <what was broken or missing>
+- Fix: <what changed to solve it>" \
   <issue_iid>
 # e.g. python $RESOLVE create-mr webapp feat/42-fix-login auto \
 #   "fix: #42 users with uppercase emails can now log in" \
-#   "Closes #42\n\nNormalizes email input before DB lookup." 42
+#   "Closes #42\n\n- Problem: login rejected uppercase emails\n- Fix: normalize email input before DB lookup" 42
 ```
 
 If the API script also fails with a permission/scope error (`403`, `insufficient_scope`, `Forbidden`), that confirms the token lacks write access — don't retry it, drop back to `glab` (step 1). If neither `glab` nor the API script works, fall back to manual:

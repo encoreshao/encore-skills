@@ -8,16 +8,17 @@ fix: #42 users with uppercase emails can now log in
 ## Description
 
 ```markdown
+## What and why
+
 Closes #42
 
-Users with uppercase characters in their email address (e.g., "User@Example.com") were
-unable to log in because the auth lookup was case-sensitive. Fixed by normalizing the input
-email to lowercase before the database query. Root cause confirmed and resolved.
+- Problem: users with uppercase characters in their email (e.g., "User@Example.com") couldn't log in — the auth lookup was case-sensitive
+- Fix: normalize the input email to lowercase before the database query
+- Result: root cause confirmed and resolved
 
 ## How
 
-Added `.downcase` to the email parameter in `AuthService` before the `find_by` call.
-No stored data is changed — only the lookup input is normalized.
+- Added `.downcase` to the email parameter in `AuthService` before the `find_by` call — no stored data changes, only the lookup input is normalized
 
 ## Verified
 
