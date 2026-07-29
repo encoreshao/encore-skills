@@ -89,21 +89,8 @@ shopt -u nullglob
 
 echo ""
 echo "Done. $pruned pruned. Restart Cursor to pick up new rules."
-mkdir -p "$HOME/.gitlab"
 
-echo ""
-echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
-echo "Next: configure GitLab access"
-echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
-echo ""
-echo "  Option 1 — from Cursor (recommended):"
-echo "    In your Cursor AI session, prompt:"
-echo "      \"run the gitlab-config skill to set up my GitLab access\""
-echo ""
-echo "  Option 2 — manual:"
-echo "    cp ~/.encore-skills/skills/gitlab-config/gitlab_config.json.template ~/.gitlab/config.json"
-echo "    chmod 600 ~/.gitlab/config.json"
-echo "    \# Edit ~/.gitlab/config.json with your GitLab URL and token"
-echo "    python ~/.encore-skills/skills/gitlab-config/scripts/gitlab_api.py list-instances"
-echo ""
-echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+if [ "${ENCORE_SKILLS_SUPPRESS_GITLAB_BANNER:-}" != "1" ]; then
+  source "$SCRIPTS_DIR/lib-gitlab-banner.sh"
+  print_gitlab_banner "$SKILLS_DIR" cursor
+fi

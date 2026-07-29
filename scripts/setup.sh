@@ -87,6 +87,18 @@ for arg in "$@"; do
   esac
 done
 
+# When installing more than one tool, each sub-script's own "configure
+# GitLab access" banner would print back-to-back and identical — suppress
+# it in each sub-script and print a single consolidated banner at the end.
+ran_tools=()
+$do_claude && ran_tools+=(claude)
+$do_cursor && ran_tools+=(cursor)
+$do_codex  && ran_tools+=(codex)
+
+if [ "${#ran_tools[@]}" -gt 1 ]; then
+  export ENCORE_SKILLS_SUPPRESS_GITLAB_BANNER=1
+fi
+
 if $do_claude; then
   echo "=== Claude Code ==="
   bash "$SCRIPTS_DIR/setup-claude.sh"
@@ -103,6 +115,12 @@ if $do_codex; then
   echo "=== Codex ==="
   bash "$SCRIPTS_DIR/setup-codex.sh"
   echo ""
+fi
+
+if [ "${#ran_tools[@]}" -gt 1 ]; then
+  SKILLS_DIR="$(cd "$SCRIPTS_DIR/../skills" && pwd)"
+  source "$SCRIPTS_DIR/lib-gitlab-banner.sh"
+  print_gitlab_banner "$SKILLS_DIR" "${ran_tools[@]}"
 fi
 
 echo "✓ Setup complete."

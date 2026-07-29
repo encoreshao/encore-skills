@@ -1,7 +1,8 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
-SKILLS_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/../skills" && pwd)"
+SCRIPTS_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+SKILLS_DIR="$(cd "$SCRIPTS_DIR/../skills" && pwd)"
 CLAUDE_SKILLS_DIR="${HOME}/.claude/skills"
 
 echo "Installing skills into Claude Code..."
@@ -12,6 +13,7 @@ echo ""
 mkdir -p "$CLAUDE_SKILLS_DIR"
 
 installed=0
+updated=0
 skipped=0
 pruned=0
 
@@ -22,7 +24,7 @@ for skill_dir in "$SKILLS_DIR"/*/; do
   if [ -L "$target" ]; then
     echo "  ↻ $skill_name (already linked, updating)"
     ln -sfn "$skill_dir" "$target"
-    ((skipped++)) || true
+    ((updated++)) || true
   elif [ -d "$target" ]; then
     echo "  ⚠ $skill_name (directory exists, not a symlink — skipping)"
     ((skipped++)) || true
@@ -47,47 +49,20 @@ done
 shopt -u nullglob
 
 echo ""
-echo "Done. $installed installed, $skipped skipped, $pruned pruned."
+echo "Done. $installed installed, $updated updated, $skipped skipped, $pruned pruned."
 
 # Install Python dependencies for gitlab-config skill
 REQS="$CLAUDE_SKILLS_DIR/gitlab-config/requirements.txt"
 if [ -f "$REQS" ]; then
   echo ""
   echo "Installing Python dependencies for gitlab-config..."
-  pip install -q -r "$REQS" && echo "  ✓ requests installed" || echo "  ⚠ pip install failed — run manually: pip install requests"
+  pip install -q --disable-pip-version-check -r "$REQS" && echo "  ✓ requests installed" || echo "  ⚠ pip install failed — run manually: pip install requests"
 fi
 
 echo ""
 echo "Restart Claude Code to pick up new skills."
-mkdir -p "$HOME/.gitlab"
 
-GITLAB_CONFIG="$HOME/.gitlab/config.json"
-
-echo ""
-echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
-if [ -s "$GITLAB_CONFIG" ]; then
-  echo "GitLab access: already configured"
-  echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
-  echo ""
-  echo "  ✓ Found $GITLAB_CONFIG — nothing to do."
-  echo ""
-  echo "  To add or update an instance/token:"
-  echo "    Restart Claude Code, then type:"
-  echo "      /gitlab-config"
-else
-  echo "Next: configure GitLab access"
-  echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
-  echo ""
-  echo "  Option 1 — from Claude Code (recommended):"
-  echo "    Restart Claude Code, then type:"
-  echo "      /gitlab-config"
-  echo "    Follow the prompts to add your GitLab instance and token."
-  echo ""
-  echo "  Option 2 — manual:"
-  echo "    cp ~/.claude/skills/gitlab-config/gitlab_config.json.template ~/.gitlab/config.json"
-  echo "    chmod 600 ~/.gitlab/config.json"
-  echo "    \# Edit ~/.gitlab/config.json with your GitLab URL and token"
-  echo "    python ~/.claude/skills/gitlab-config/scripts/gitlab_api.py list-instances"
+if [ "${ENCORE_SKILLS_SUPPRESS_GITLAB_BANNER:-}" != "1" ]; then
+  source "$SCRIPTS_DIR/lib-gitlab-banner.sh"
+  print_gitlab_banner "$CLAUDE_SKILLS_DIR" claude
 fi
-echo ""
-echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
