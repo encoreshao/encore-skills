@@ -19,9 +19,20 @@ else
 fi
 
 # Re-run Claude install (picks up any new skill directories)
+STATS_FILE="$(mktemp)"
+trap 'rm -f "$STATS_FILE"' EXIT
+export ENCORE_SKILLS_STATS_FILE="$STATS_FILE"
+
 echo "=== Updating Claude Code ==="
 bash "$SCRIPTS_DIR/setup-claude.sh"
 echo ""
+
+SKILLS_DIR="$(cd "$SCRIPTS_DIR/../skills" && pwd)"
+source "$SCRIPTS_DIR/lib-summary-table.sh"
+print_summary_table "$STATS_FILE"
+
+source "$SCRIPTS_DIR/lib-gitlab-banner.sh"
+print_gitlab_banner "$SKILLS_DIR" claude
 
 echo "✓ Claude Code updated."
 echo ""

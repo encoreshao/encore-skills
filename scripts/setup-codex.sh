@@ -29,6 +29,15 @@ else
 fi
 echo ""
 
+source "$SCRIPTS_DIR/lib-progress.sh"
+
+created=0
+skipped=0
+
+total=0
+for skill_dir in "$SKILLS_DIR"/*/; do ((total++)) || true; done
+i=0
+
 if $SELF_HOSTED; then
   cat > "$TARGET_FILE" <<'HEADER'
 # Available Skills
@@ -48,14 +57,21 @@ HEADER
   for skill_dir in "$SKILLS_DIR"/*/; do
     skill_name="$(basename "$skill_dir")"
     skill_md="$skill_dir/SKILL.md"
+    ((i++)) || true
 
     if [ ! -f "$skill_md" ]; then
+      progress_break
+      echo "  ⚠ $skill_name — no SKILL.md, skipping"
+      ((skipped++)) || true
+      progress_bar "$i" "$total" "$skill_name"
       continue
     fi
 
     description=$(awk '/^---/{found++; next} found==1 && /^description:/{sub(/^description:[[:space:]]*/, ""); print; exit}' "$skill_md")
     echo "| \`${skill_name}\` | \`skills/${skill_name}/SKILL.md\` | ${description} |" >> "$TARGET_FILE"
-    echo "  ✓ $skill_name"
+    ((created++)) || true
+    [ -t 1 ] || echo "  ✓ $skill_name"
+    progress_bar "$i" "$total" "$skill_name"
   done
 
   echo "" >> "$TARGET_FILE"
@@ -75,13 +91,20 @@ HEADER
   for skill_dir in "$SKILLS_DIR"/*/; do
     skill_name="$(basename "$skill_dir")"
     skill_md="$skill_dir/SKILL.md"
+    ((i++)) || true
 
     if [ ! -f "$skill_md" ]; then
+      progress_break
+      echo "  ⚠ $skill_name — no SKILL.md, skipping"
+      ((skipped++)) || true
+      progress_bar "$i" "$total" "$skill_name"
       continue
     fi
 
     description=$(awk '/^---/{found++; next} found==1 && /^description:/{sub(/^description:[[:space:]]*/, ""); print; exit}' "$skill_md")
     echo "| \`${skill_name}\` | — | ${description} |" >> "$TARGET_FILE"
+    ((created++)) || true
+    progress_bar "$i" "$total" "$skill_name"
   done
 
   echo "" >> "$TARGET_FILE"
@@ -110,14 +133,18 @@ HEADER
       echo ""
     } >> "$TARGET_FILE"
 
-    echo "  ✓ $skill_name"
+    [ -t 1 ] || echo "  ✓ $skill_name"
   done
 fi
 
-echo ""
-echo "Done. AGENTS.md written to $TARGET_FILE"
+if [ -n "${ENCORE_SKILLS_STATS_FILE:-}" ]; then
+  echo "Codex|$created|0|$skipped|0" >> "$ENCORE_SKILLS_STATS_FILE"
+else
+  echo ""
+  echo "Done. AGENTS.md written to $TARGET_FILE"
+fi
 
-if [ "${ENCORE_SKILLS_SUPPRESS_GITLAB_BANNER:-}" != "1" ]; then
+if [ -z "${ENCORE_SKILLS_STATS_FILE:-}" ]; then
   source "$SCRIPTS_DIR/lib-gitlab-banner.sh"
   print_gitlab_banner "$SKILLS_DIR" codex
 fi

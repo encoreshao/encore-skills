@@ -87,17 +87,18 @@ for arg in "$@"; do
   esac
 done
 
-# When installing more than one tool, each sub-script's own "configure
-# GitLab access" banner would print back-to-back and identical — suppress
-# it in each sub-script and print a single consolidated banner at the end.
+# Each sub-script can report its per-skill counts and defer the "configure
+# GitLab access" banner to us, so a multi-tool run gets one summary table
+# and one banner instead of one of each per tool. STATS_FILE presence is
+# what each sub-script checks to decide whether to defer.
 ran_tools=()
 $do_claude && ran_tools+=(claude)
 $do_cursor && ran_tools+=(cursor)
 $do_codex  && ran_tools+=(codex)
 
-if [ "${#ran_tools[@]}" -gt 1 ]; then
-  export ENCORE_SKILLS_SUPPRESS_GITLAB_BANNER=1
-fi
+STATS_FILE="$(mktemp)"
+trap 'rm -f "$STATS_FILE"' EXIT
+export ENCORE_SKILLS_STATS_FILE="$STATS_FILE"
 
 if $do_claude; then
   echo "=== Claude Code ==="
@@ -117,10 +118,11 @@ if $do_codex; then
   echo ""
 fi
 
-if [ "${#ran_tools[@]}" -gt 1 ]; then
-  SKILLS_DIR="$(cd "$SCRIPTS_DIR/../skills" && pwd)"
-  source "$SCRIPTS_DIR/lib-gitlab-banner.sh"
-  print_gitlab_banner "$SKILLS_DIR" "${ran_tools[@]}"
-fi
+SKILLS_DIR="$(cd "$SCRIPTS_DIR/../skills" && pwd)"
+source "$SCRIPTS_DIR/lib-summary-table.sh"
+print_summary_table "$STATS_FILE"
+
+source "$SCRIPTS_DIR/lib-gitlab-banner.sh"
+print_gitlab_banner "$SKILLS_DIR" "${ran_tools[@]}"
 
 echo "✓ Setup complete."

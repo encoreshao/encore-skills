@@ -10,6 +10,8 @@ echo "  Source: $SKILLS_DIR"
 echo "  Target: $CLAUDE_SKILLS_DIR"
 echo ""
 
+source "$SCRIPTS_DIR/lib-progress.sh"
+
 mkdir -p "$CLAUDE_SKILLS_DIR"
 
 installed=0
@@ -17,22 +19,29 @@ updated=0
 skipped=0
 pruned=0
 
+total=0
+for skill_dir in "$SKILLS_DIR"/*/; do ((total++)) || true; done
+
+i=0
 for skill_dir in "$SKILLS_DIR"/*/; do
   skill_name="$(basename "$skill_dir")"
   target="$CLAUDE_SKILLS_DIR/$skill_name"
+  ((i++)) || true
 
   if [ -L "$target" ]; then
-    echo "  ↻ $skill_name (already linked, updating)"
     ln -sfn "$skill_dir" "$target"
     ((updated++)) || true
+    [ -t 1 ] || echo "  ↻ $skill_name (already linked, updating)"
   elif [ -d "$target" ]; then
+    progress_break
     echo "  ⚠ $skill_name (directory exists, not a symlink — skipping)"
     ((skipped++)) || true
   else
     ln -s "$skill_dir" "$target"
-    echo "  ✓ $skill_name"
     ((installed++)) || true
+    [ -t 1 ] || echo "  ✓ $skill_name"
   fi
+  progress_bar "$i" "$total" "$skill_name"
 done
 
 # Prune symlinks for skills that no longer exist in the source (e.g. removed skills)
@@ -48,8 +57,12 @@ for target in "$CLAUDE_SKILLS_DIR"/*; do
 done
 shopt -u nullglob
 
-echo ""
-echo "Done. $installed installed, $updated updated, $skipped skipped, $pruned pruned."
+if [ -n "${ENCORE_SKILLS_STATS_FILE:-}" ]; then
+  echo "Claude|$installed|$updated|$skipped|$pruned" >> "$ENCORE_SKILLS_STATS_FILE"
+else
+  echo ""
+  echo "Done. $installed installed, $updated updated, $skipped skipped, $pruned pruned."
+fi
 
 # Install Python dependencies for gitlab-config skill
 REQS="$CLAUDE_SKILLS_DIR/gitlab-config/requirements.txt"
@@ -62,7 +75,7 @@ fi
 echo ""
 echo "Restart Claude Code to pick up new skills."
 
-if [ "${ENCORE_SKILLS_SUPPRESS_GITLAB_BANNER:-}" != "1" ]; then
+if [ -z "${ENCORE_SKILLS_STATS_FILE:-}" ]; then
   source "$SCRIPTS_DIR/lib-gitlab-banner.sh"
   print_gitlab_banner "$CLAUDE_SKILLS_DIR" claude
 fi

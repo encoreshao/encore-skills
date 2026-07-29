@@ -30,14 +30,28 @@ else
 fi
 echo ""
 
+source "$SCRIPTS_DIR/lib-progress.sh"
+
 mkdir -p "$TARGET_DIR"
 
+created=0
+updated=0
+skipped=0
+
+total=0
+for skill_dir in "$SKILLS_DIR"/*/; do ((total++)) || true; done
+
+i=0
 for skill_dir in "$SKILLS_DIR"/*/; do
   skill_name="$(basename "$skill_dir")"
   skill_md="$skill_dir/SKILL.md"
+  ((i++)) || true
 
   if [ ! -f "$skill_md" ]; then
+    progress_break
     echo "  ⚠ $skill_name — no SKILL.md, skipping"
+    ((skipped++)) || true
+    progress_bar "$i" "$total" "$skill_name"
     continue
   fi
 
@@ -45,6 +59,8 @@ for skill_dir in "$SKILLS_DIR"/*/; do
   description=$(awk '/^---/{found++; next} found==1 && /^description:/{sub(/^description:[[:space:]]*/, ""); print; exit}' "$skill_md")
 
   target_file="$TARGET_DIR/${skill_name}.mdc"
+  existed=false
+  if [ -f "$target_file" ]; then existed=true; fi
 
   if $SELF_HOSTED; then
     cat > "$target_file" <<MDC
@@ -71,7 +87,9 @@ ${body}
 MDC
   fi
 
-  echo "  ✓ $skill_name → .cursor/rules/${skill_name}.mdc"
+  if $existed; then ((updated++)) || true; else ((created++)) || true; fi
+  [ -t 1 ] || echo "  ✓ $skill_name → .cursor/rules/${skill_name}.mdc"
+  progress_bar "$i" "$total" "$skill_name"
 done
 
 # Prune rule files for skills that no longer exist in the source (e.g. removed skills)
@@ -81,16 +99,21 @@ for target in "$TARGET_DIR"/*.mdc; do
   skill_name="$(basename "$target" .mdc)"
   if [ ! -d "$SKILLS_DIR/$skill_name" ]; then
     rm "$target"
+    progress_break
     echo "  ✗ $skill_name.mdc (removed from source, pruned)"
     ((pruned++)) || true
   fi
 done
 shopt -u nullglob
 
-echo ""
-echo "Done. $pruned pruned. Restart Cursor to pick up new rules."
+if [ -n "${ENCORE_SKILLS_STATS_FILE:-}" ]; then
+  echo "Cursor|$created|$updated|$skipped|$pruned" >> "$ENCORE_SKILLS_STATS_FILE"
+else
+  echo ""
+  echo "Done. $created created, $updated updated, $skipped skipped, $pruned pruned. Restart Cursor to pick up new rules."
+fi
 
-if [ "${ENCORE_SKILLS_SUPPRESS_GITLAB_BANNER:-}" != "1" ]; then
+if [ -z "${ENCORE_SKILLS_STATS_FILE:-}" ]; then
   source "$SCRIPTS_DIR/lib-gitlab-banner.sh"
   print_gitlab_banner "$SKILLS_DIR" cursor
 fi
