@@ -59,6 +59,8 @@ fi
 
 echo ""
 echo "Restart Claude Code to pick up new skills."
+mkdir -p "$HOME/.gitlab"
+
 echo ""
 echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
 echo "Next: configure GitLab access"

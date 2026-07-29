@@ -116,6 +116,8 @@ fi
 
 echo ""
 echo "Done. AGENTS.md written to $TARGET_FILE"
+mkdir -p "$HOME/.gitlab"
+
 echo ""
 echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
 echo "Next: configure GitLab access"

@@ -89,6 +89,8 @@ shopt -u nullglob
 
 echo ""
 echo "Done. $pruned pruned. Restart Cursor to pick up new rules."
+mkdir -p "$HOME/.gitlab"
+
 echo ""
 echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
 echo "Next: configure GitLab access"
