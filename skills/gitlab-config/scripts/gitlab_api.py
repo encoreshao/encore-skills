@@ -83,6 +83,9 @@ def load_gitlab_config(instance_name: Optional[str] = None, bundle_name: Optiona
                         )
                         sys.exit(1)
                     token = bundle.get('token', '')
+                    if not token:
+                        print(f"Error: Bundle '{bundle_name}' has no token configured", file=sys.stderr)
+                        sys.exit(1)
 
                 if url and token:
                     return url, token
@@ -467,6 +470,7 @@ def main():
     # Resolve project alias if a project argument is provided
     bundle_name = None
     if len(args) > 1:
+        explicit_instance = instance_name is not None
         project_arg = args[1]
         resolved_project_id, resolved_instance, resolved_bundle = resolve_project_alias(project_arg, instance_name)
         args[1] = resolved_project_id
@@ -474,7 +478,13 @@ def main():
         # Use the instance from project config if not explicitly set
         if instance_name is None and resolved_instance is not None:
             instance_name = resolved_instance
-        bundle_name = resolved_bundle
+
+        # An explicit --instance= override means "ignore this alias's own
+        # instance-specific settings, including its bundle" - it keeps
+        # overriding as it did before bundles existed, using the target
+        # instance's own token rather than erroring on a bundle/instance
+        # mismatch.
+        bundle_name = None if explicit_instance else resolved_bundle
 
     # Initialize API with optional instance name and bundle
     api = GitLabAPI(instance_name, bundle_name)

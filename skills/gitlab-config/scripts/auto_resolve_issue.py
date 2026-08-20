@@ -148,10 +148,18 @@ def main():
         elif command == 'create-mr':
             project_arg = args[1]
             # Resolve project alias and instance
+            explicit_instance = instance_name is not None
             project_id, resolved_instance, resolved_bundle = resolve_project_alias(project_arg, instance_name)
             # Use resolved instance if not explicitly provided
             if instance_name is None and resolved_instance is not None:
                 instance_name = resolved_instance
+
+            # An explicit --instance= override means "ignore this alias's own
+            # instance-specific settings, including its bundle" - it keeps
+            # overriding as it did before bundles existed, using the target
+            # instance's own token rather than erroring on a bundle/instance
+            # mismatch.
+            bundle_name = None if explicit_instance else resolved_bundle
 
             source_branch = args[2]
             target_branch = args[3]
@@ -160,7 +168,7 @@ def main():
             title = args[4]
             description = args[5]
             issue_iid = int(args[6])
-            mr = create_merge_request(project_id, source_branch, target_branch, title, description, issue_iid, instance_name, resolved_bundle)
+            mr = create_merge_request(project_id, source_branch, target_branch, title, description, issue_iid, instance_name, bundle_name)
             print(json.dumps(mr, indent=2))
 
         else:

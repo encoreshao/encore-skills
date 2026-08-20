@@ -63,3 +63,30 @@ def test_main_create_mr_passes_resolved_bundle_through(tmp_path, monkeypatch, ca
 
     assert captured == {"project_id": "ekohe/sonar/sonar-next.web", "instance_name": "ekohe", "bundle_name": "sonar-limited"}
     assert "web_url" in capsys.readouterr().out
+
+
+def test_main_create_mr_instance_override_drops_alias_bundle(tmp_path, monkeypatch, capsys):
+    """An explicit --instance= override must ignore the alias's own bundle,
+    matching the behavior in gitlab_api.py's main()."""
+    monkeypatch.chdir(tmp_path)
+    (tmp_path / "gitlab_config.json").write_text(json.dumps({
+        "projects": {"stripes": {"project_id": "ekohe/sonar/sonar-next.web", "instance": "ekohe", "bundle": "sonar-limited"}},
+    }))
+
+    captured = {}
+
+    def fake_create_merge_request(project_id, source_branch, target_branch, title, description, issue_iid, instance_name=None, bundle_name=None):
+        captured["project_id"] = project_id
+        captured["instance_name"] = instance_name
+        captured["bundle_name"] = bundle_name
+        return {"web_url": "https://gitlab.example.com/mr/1"}
+
+    monkeypatch.setattr(auto_resolve_issue, "create_merge_request", fake_create_merge_request)
+    monkeypatch.setattr(sys, "argv", [
+        "auto_resolve_issue.py", "--instance=other", "create-mr", "stripes", "loop/issue-1", "main", "title", "description", "1",
+    ])
+
+    auto_resolve_issue.main()
+
+    assert captured == {"project_id": "ekohe/sonar/sonar-next.web", "instance_name": "other", "bundle_name": None}
+    assert "web_url" in capsys.readouterr().out

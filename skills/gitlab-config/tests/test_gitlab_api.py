@@ -115,6 +115,58 @@ def test_project_info_unknown_alias_exits(tmp_path, monkeypatch, capsys):
     assert "Unknown project alias" in capsys.readouterr().err
 
 
+def test_load_gitlab_config_rejects_empty_bundle_token(tmp_path, monkeypatch, capsys):
+    monkeypatch.chdir(tmp_path)
+    monkeypatch.setattr(Path, "home", lambda: tmp_path / "not-a-real-home")
+    monkeypatch.delenv("GITLAB_URL", raising=False)
+    monkeypatch.delenv("GITLAB_TOKEN", raising=False)
+    _write_config(tmp_path, {
+        "default": "ekohe",
+        "instances": {"ekohe": {"url": "https://gitlab.ekohe.com", "token": "instance-token"}},
+        "bundles": {"sonar-limited": {"instance": "ekohe", "token": ""}},
+    })
+
+    with pytest.raises(SystemExit):
+        gitlab_api.load_gitlab_config("ekohe", "sonar-limited")
+
+    assert "sonar-limited" in capsys.readouterr().err
+
+
+def test_main_instance_override_drops_alias_bundle(tmp_path, monkeypatch):
+    """An explicit --instance= override must ignore the alias's own bundle,
+    not carry it forward to an instance the bundle wasn't configured for."""
+    monkeypatch.chdir(tmp_path)
+    _write_config(tmp_path, {
+        "default": "ekohe",
+        "instances": {
+            "ekohe": {"url": "https://gitlab.ekohe.com", "token": "ekohe-token"},
+            "other": {"url": "https://gitlab.other.com", "token": "other-token"},
+        },
+        "projects": {"stripes": {"project_id": "ekohe/sonar/sonar-next.web", "instance": "ekohe", "bundle": "sonar-limited"}},
+        "bundles": {"sonar-limited": {"instance": "ekohe", "token": "bundle-token"}},
+    })
+
+    captured = {}
+
+    class FakeGitLabAPI:
+        def __init__(self, instance_name=None, bundle_name=None):
+            captured["instance_name"] = instance_name
+            captured["bundle_name"] = bundle_name
+            self.instance_name = instance_name
+
+        def list_merge_requests(self, project_id, state):
+            return []
+
+    monkeypatch.setattr(gitlab_api, "GitLabAPI", FakeGitLabAPI)
+    monkeypatch.setattr(sys, "argv", [
+        "gitlab_api.py", "--instance=other", "list-mrs", "stripes", "opened",
+    ])
+
+    gitlab_api.main()
+
+    assert captured == {"instance_name": "other", "bundle_name": None}
+
+
 def test_resolve_project_alias_returns_3tuple_for_non_alias(tmp_path, monkeypatch):
     """When project arg is not a configured alias, resolve_project_alias still returns 3-tuple with None bundle."""
     monkeypatch.chdir(tmp_path)
