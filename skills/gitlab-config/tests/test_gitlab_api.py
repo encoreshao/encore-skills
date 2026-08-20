@@ -113,3 +113,17 @@ def test_project_info_unknown_alias_exits(tmp_path, monkeypatch, capsys):
         gitlab_api.project_info("nope")
 
     assert "Unknown project alias" in capsys.readouterr().err
+
+
+def test_resolve_project_alias_returns_3tuple_for_non_alias(tmp_path, monkeypatch):
+    """When project arg is not a configured alias, resolve_project_alias still returns 3-tuple with None bundle."""
+    monkeypatch.chdir(tmp_path)
+    _write_config(tmp_path, {
+        "projects": {"myproj": {"project_id": "a/b/c", "instance": "default"}},
+    })
+
+    project_id, instance_name, bundle_name = gitlab_api.resolve_project_alias("unknown/project")
+
+    assert project_id == "unknown/project"
+    assert instance_name is None
+    assert bundle_name is None

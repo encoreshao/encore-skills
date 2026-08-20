@@ -74,11 +74,11 @@ def push_branch(branch_name: str) -> None:
 
 def create_merge_request(project_id: str, source_branch: str, target_branch: str,
                         title: str, description: str, issue_iid: int,
-                        instance_name: Optional[str] = None) -> Dict:
+                        instance_name: Optional[str] = None, bundle_name: Optional[str] = None) -> Dict:
     """Create a merge request via GitLab API."""
     import requests
 
-    base_url, token = load_gitlab_config(instance_name)
+    base_url, token = load_gitlab_config(instance_name, bundle_name)
 
     api_url = f"{base_url}/api/v4"
     headers = {
@@ -148,7 +148,7 @@ def main():
         elif command == 'create-mr':
             project_arg = args[1]
             # Resolve project alias and instance
-            project_id, resolved_instance = resolve_project_alias(project_arg, instance_name)
+            project_id, resolved_instance, resolved_bundle = resolve_project_alias(project_arg, instance_name)
             # Use resolved instance if not explicitly provided
             if instance_name is None and resolved_instance is not None:
                 instance_name = resolved_instance
@@ -160,7 +160,7 @@ def main():
             title = args[4]
             description = args[5]
             issue_iid = int(args[6])
-            mr = create_merge_request(project_id, source_branch, target_branch, title, description, issue_iid, instance_name)
+            mr = create_merge_request(project_id, source_branch, target_branch, title, description, issue_iid, instance_name, resolved_bundle)
             print(json.dumps(mr, indent=2))
 
         else:
