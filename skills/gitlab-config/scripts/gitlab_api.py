@@ -19,7 +19,7 @@ sys.path.insert(0, str(Path(__file__).parent))
 import gitlab_cache
 
 
-def load_gitlab_config(instance_name: Optional[str] = None) -> tuple[str, str]:
+def load_gitlab_config(instance_name: Optional[str] = None, bundle_name: Optional[str] = None) -> tuple[str, str]:
     """
     Load GitLab configuration from config file or environment variables.
 
@@ -27,6 +27,15 @@ def load_gitlab_config(instance_name: Optional[str] = None) -> tuple[str, str]:
     1. ./gitlab_config.json
     2. ~/.gitlab/config.json
     3. <script_dir>/gitlab_config.json
+
+    Args:
+        instance_name: which configured instance to use (falls back to the
+            config's "default" if not given).
+        bundle_name: optional access-bundle name (from the config's
+            "bundles" section) whose token overrides the instance's own
+            token. The bundle's own "instance" must match instance_name
+            once both are known - a mismatch is a config error (exits 1),
+            never a silent wrong-server call.
 
     Returns:
         tuple: (base_url, token)
@@ -60,6 +69,20 @@ def load_gitlab_config(instance_name: Optional[str] = None) -> tuple[str, str]:
 
                 url = instance.get('url', '').rstrip('/')
                 token = instance.get('token', '')
+
+                if bundle_name:
+                    bundle = config.get('bundles', {}).get(bundle_name)
+                    if not bundle:
+                        print(f"Error: Bundle '{bundle_name}' not found in config", file=sys.stderr)
+                        sys.exit(1)
+                    if bundle.get('instance') != instance_name:
+                        print(
+                            f"Error: Bundle '{bundle_name}' is for instance "
+                            f"'{bundle.get('instance')}', not '{instance_name}'",
+                            file=sys.stderr,
+                        )
+                        sys.exit(1)
+                    token = bundle.get('token', '')
 
                 if url and token:
                     return url, token
@@ -117,38 +140,36 @@ def load_config() -> Optional[Dict]:
         return None
 
 
-def resolve_project_alias(project_alias: str, instance_name: Optional[str] = None) -> tuple[str, Optional[str]]:
+def resolve_project_alias(project_alias: str, instance_name: Optional[str] = None) -> tuple[str, Optional[str], Optional[str]]:
     """
-    Resolve a project alias to its full project ID and determine instance.
+    Resolve a project alias to its full project ID, instance, and access bundle.
 
     Args:
         project_alias: Project alias or full project ID
         instance_name: Optional instance name (overrides project config)
 
     Returns:
-        tuple: (project_id, instance_name)
+        tuple: (project_id, instance_name, bundle_name)
     """
     config = load_config()
 
-    # If no config or no projects section, return as-is
     if not config or 'projects' not in config:
-        return project_alias, instance_name
+        return project_alias, instance_name, None
 
     projects = config.get('projects', {})
 
-    # Check if this is a project alias
     if project_alias in projects:
         project_config = projects[project_alias]
         project_id = project_config.get('project_id', project_alias)
 
-        # Use instance from project config if not explicitly specified
         if instance_name is None:
             instance_name = project_config.get('instance')
 
-        return project_id, instance_name
+        bundle_name = project_config.get('bundle')
 
-    # Not an alias, return as-is
-    return project_alias, instance_name
+        return project_id, instance_name, bundle_name
+
+    return project_alias, instance_name, None
 
 
 def resolve_instance_name(instance_name: Optional[str] = None) -> str:
@@ -236,12 +257,30 @@ def list_projects() -> None:
         sys.exit(1)
 
 
+def project_info(alias: str) -> None:
+    """Print {project_id, instance, bundle} for one configured project
+    alias as JSON - a clean, scriptable way to read a project's own bundle
+    name (used by kurrant-claude-loop's LOOP_INSTRUCTIONS.md to route Slack
+    notifications to a bundle-specific webhook)."""
+    config = load_config()
+    projects = (config or {}).get('projects', {})
+    project = projects.get(alias)
+    if project is None:
+        print(f"Error: Unknown project alias '{alias}'", file=sys.stderr)
+        sys.exit(1)
+    print(json.dumps({
+        'project_id': project.get('project_id', alias),
+        'instance': project.get('instance'),
+        'bundle': project.get('bundle'),
+    }, indent=2))
+
+
 class GitLabAPI:
     """GitLab API client for issues, merge requests, and comments."""
 
-    def __init__(self, instance_name: Optional[str] = None):
+    def __init__(self, instance_name: Optional[str] = None, bundle_name: Optional[str] = None):
         self.instance_name = resolve_instance_name(instance_name)
-        self.base_url, self.token = load_gitlab_config(instance_name)
+        self.base_url, self.token = load_gitlab_config(instance_name, bundle_name)
 
         self.headers = {
             'PRIVATE-TOKEN': self.token,
@@ -378,6 +417,7 @@ def main():
         print("\nCommands:", file=sys.stderr)
         print("  list-instances                                   - List configured GitLab instances", file=sys.stderr)
         print("  list-projects                                    - List configured project aliases", file=sys.stderr)
+        print("  project-info <alias>                             - Print {project_id, instance, bundle} for one alias as JSON", file=sys.stderr)
         print("  whoami                                           - Show the authenticated GitLab user", file=sys.stderr)
         print("  get-issue <project> <issue_iid>                 - Fetch issue with comments", file=sys.stderr)
         print("  list-issues <project> [state] [labels...]       - List issues with filters", file=sys.stderr)
@@ -417,18 +457,27 @@ def main():
         list_projects()
         return
 
+    if command == 'project-info':
+        if len(args) < 2:
+            print("Usage: gitlab_api.py project-info <alias>", file=sys.stderr)
+            sys.exit(1)
+        project_info(args[1])
+        return
+
     # Resolve project alias if a project argument is provided
+    bundle_name = None
     if len(args) > 1:
         project_arg = args[1]
-        resolved_project_id, resolved_instance = resolve_project_alias(project_arg, instance_name)
+        resolved_project_id, resolved_instance, resolved_bundle = resolve_project_alias(project_arg, instance_name)
         args[1] = resolved_project_id
 
         # Use the instance from project config if not explicitly set
         if instance_name is None and resolved_instance is not None:
             instance_name = resolved_instance
+        bundle_name = resolved_bundle
 
-    # Initialize API with optional instance name
-    api = GitLabAPI(instance_name)
+    # Initialize API with optional instance name and bundle
+    api = GitLabAPI(instance_name, bundle_name)
 
     try:
         if command == 'whoami':
