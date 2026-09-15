@@ -306,6 +306,27 @@ class GitLabAPI:
             print(f"Error: {e}", file=sys.stderr)
             sys.exit(1)
 
+    def _request_all(self, endpoint: str, params: Optional[Dict] = None, max_pages: int = 50) -> List[Dict]:
+        """GET every page of a paginated list endpoint and return the
+        combined results. GitLab's REST API silently caps a single response
+        at its default per_page (20) with no warning - a project that
+        outgrows that page size would otherwise have older matching
+        issues/MRs quietly vanish from callers that only read page 1.
+        max_pages is a sane backstop against an API that never returns a
+        short page, not a real expected case."""
+        params = dict(params or {})
+        params['per_page'] = 100
+        results = []
+        for page in range(1, max_pages + 1):
+            params['page'] = page
+            batch = self._request('GET', endpoint, params=params)
+            if not batch:
+                break
+            results.extend(batch)
+            if len(batch) < params['per_page']:
+                break
+        return results
+
     def get_current_user(self) -> Dict:
         """Get the authenticated user for this token."""
         return self._request('GET', 'user')
@@ -336,13 +357,24 @@ class GitLabAPI:
 
         return issue
 
-    def list_issues(self, project_id: str, state: str = 'opened', labels: Optional[List[str]] = None) -> List[Dict]:
-        """List issues in a project."""
+    def list_issues(self, project_id: str, state: str = 'opened', labels: Optional[List[str]] = None,
+                     assignee_username: Optional[str] = None, author_username: Optional[str] = None) -> List[Dict]:
+        """List issues in a project, paging through every result (see
+        _request_all) rather than trusting GitLab's default single-page
+        response. assignee_username/author_username are passed straight
+        through as GitLab API filters when given - each narrows results
+        server-side, so combined with a caller's own de-dupe (two separate
+        calls, one per filter) they're the correct way to ask "assigned to
+        OR authored by this user" without missing anything past page 1."""
         params = {'state': state}
         if labels:
             params['labels'] = ','.join(labels)
+        if assignee_username:
+            params['assignee_username'] = assignee_username
+        if author_username:
+            params['author_username'] = author_username
 
-        return self._request('GET', f"projects/{requests.utils.quote(project_id, safe='')}/issues", params=params)
+        return self._request_all(f"projects/{requests.utils.quote(project_id, safe='')}/issues", params=params)
 
     def get_merge_request(self, project_id: str, mr_iid: int) -> Dict:
         """Get merge request details including changes and comments."""
@@ -358,10 +390,17 @@ class GitLabAPI:
 
         return mr
 
-    def list_merge_requests(self, project_id: str, state: str = 'opened') -> List[Dict]:
-        """List merge requests in a project."""
+    def list_merge_requests(self, project_id: str, state: str = 'opened',
+                             assignee_username: Optional[str] = None,
+                             author_username: Optional[str] = None) -> List[Dict]:
+        """List merge requests in a project. See list_issues for why this
+        pages through every result and accepts the same two filters."""
         params = {'state': state}
-        return self._request('GET', f"projects/{requests.utils.quote(project_id, safe='')}/merge_requests", params=params)
+        if assignee_username:
+            params['assignee_username'] = assignee_username
+        if author_username:
+            params['author_username'] = author_username
+        return self._request_all(f"projects/{requests.utils.quote(project_id, safe='')}/merge_requests", params=params)
 
     def post_issue_comment(self, project_id: str, issue_iid: int, body: str) -> Dict:
         """Post a comment on an issue."""
@@ -413,6 +452,27 @@ class GitLabAPI:
         return stats
 
 
+def _pop_kv_flags(args: List[str], keys: tuple) -> tuple[List[str], Dict[str, str]]:
+    """Split `--key=value` flags (any of `keys`, in any position) out of
+    `args`, returning (remaining positional args, {key: value}). Lets
+    list-issues/list-mrs accept --assignee=/--author= alongside their
+    existing positional state/labels args without disturbing those
+    positions."""
+    remaining = []
+    found = {}
+    for arg in args:
+        matched = False
+        for key in keys:
+            prefix = f"--{key}="
+            if arg.startswith(prefix):
+                found[key] = arg[len(prefix):]
+                matched = True
+                break
+        if not matched:
+            remaining.append(arg)
+    return remaining, found
+
+
 def main():
     """CLI interface for GitLab API operations."""
     if len(sys.argv) < 2:
@@ -423,9 +483,11 @@ def main():
         print("  project-info <alias>                             - Print {project_id, instance, bundle} for one alias as JSON", file=sys.stderr)
         print("  whoami                                           - Show the authenticated GitLab user", file=sys.stderr)
         print("  get-issue <project> <issue_iid>                 - Fetch issue with comments", file=sys.stderr)
-        print("  list-issues <project> [state] [labels...]       - List issues with filters", file=sys.stderr)
+        print("  list-issues <project> [state] [labels...] [--assignee=<user>] [--author=<user>]", file=sys.stderr)
+        print("                                                   - List issues with filters (paginates through all results)", file=sys.stderr)
         print("  get-mr <project> <mr_iid>                       - Fetch merge request with changes", file=sys.stderr)
-        print("  list-mrs <project> [state]                      - List merge requests", file=sys.stderr)
+        print("  list-mrs <project> [state] [--assignee=<user>] [--author=<user>]", file=sys.stderr)
+        print("                                                   - List merge requests (paginates through all results)", file=sys.stderr)
         print("  post-issue-comment <project> <issue_iid> <comment>", file=sys.stderr)
         print("  post-mr-comment <project> <mr_iid> <comment>", file=sys.stderr)
         print("  get-diff <project> <mr_iid>                     - Get unified diff for MR", file=sys.stderr)
@@ -498,19 +560,25 @@ def main():
             result = api.get_issue(project_id, issue_iid)
 
         elif command == 'list-issues':
-            project_id = args[1]
-            state = args[2] if len(args) > 2 else 'opened'
-            labels = args[3:] if len(args) > 3 else None
-            result = api.list_issues(project_id, state, labels)
+            positional, flags = _pop_kv_flags(args[1:], ('assignee', 'author'))
+            project_id = positional[0]
+            state = positional[1] if len(positional) > 1 else 'opened'
+            labels = positional[2:] if len(positional) > 2 else None
+            result = api.list_issues(project_id, state, labels,
+                                      assignee_username=flags.get('assignee'),
+                                      author_username=flags.get('author'))
 
         elif command == 'get-mr':
             project_id, mr_iid = args[1], int(args[2])
             result = api.get_merge_request(project_id, mr_iid)
 
         elif command == 'list-mrs':
-            project_id = args[1]
-            state = args[2] if len(args) > 2 else 'opened'
-            result = api.list_merge_requests(project_id, state)
+            positional, flags = _pop_kv_flags(args[1:], ('assignee', 'author'))
+            project_id = positional[0]
+            state = positional[1] if len(positional) > 1 else 'opened'
+            result = api.list_merge_requests(project_id, state,
+                                              assignee_username=flags.get('assignee'),
+                                              author_username=flags.get('author'))
 
         elif command == 'post-issue-comment':
             project_id, issue_iid, comment = args[1], int(args[2]), args[3]

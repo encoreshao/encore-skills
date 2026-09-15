@@ -154,7 +154,7 @@ def test_main_instance_override_drops_alias_bundle(tmp_path, monkeypatch):
             captured["bundle_name"] = bundle_name
             self.instance_name = instance_name
 
-        def list_merge_requests(self, project_id, state):
+        def list_merge_requests(self, project_id, state, assignee_username=None, author_username=None):
             return []
 
     monkeypatch.setattr(gitlab_api, "GitLabAPI", FakeGitLabAPI)
@@ -165,6 +165,192 @@ def test_main_instance_override_drops_alias_bundle(tmp_path, monkeypatch):
     gitlab_api.main()
 
     assert captured == {"instance_name": "other", "bundle_name": None}
+
+
+def _api_with_fake_request(tmp_path, monkeypatch):
+    """A real GitLabAPI whose low-level _request is replaced with a fake
+    the test controls, so list_issues/list_merge_requests exercise their
+    own pagination/param-building logic without a real HTTP call."""
+    monkeypatch.chdir(tmp_path)
+    _write_config(tmp_path, {
+        "default": "ekohe",
+        "instances": {"ekohe": {"url": "https://gitlab.ekohe.com", "token": "tok"}},
+    })
+    return gitlab_api.GitLabAPI("ekohe")
+
+
+def test_list_issues_passes_assignee_and_author_filters(tmp_path, monkeypatch):
+    api = _api_with_fake_request(tmp_path, monkeypatch)
+    captured = {}
+
+    def fake_request(method, endpoint, params=None):
+        captured["params"] = params
+        return []
+
+    monkeypatch.setattr(api, "_request", fake_request)
+
+    api.list_issues("a/b", assignee_username="encore", author_username="encore")
+
+    assert captured["params"]["assignee_username"] == "encore"
+    assert captured["params"]["author_username"] == "encore"
+
+
+def test_list_issues_omits_filters_when_not_given(tmp_path, monkeypatch):
+    api = _api_with_fake_request(tmp_path, monkeypatch)
+    captured = {}
+
+    def fake_request(method, endpoint, params=None):
+        captured["params"] = params
+        return []
+
+    monkeypatch.setattr(api, "_request", fake_request)
+
+    api.list_issues("a/b")
+
+    assert "assignee_username" not in captured["params"]
+    assert "author_username" not in captured["params"]
+
+
+def test_list_issues_pages_through_all_results(tmp_path, monkeypatch):
+    """GitLab's REST API silently caps a single response at its default
+    per_page (20) - a project with more open issues than that must not have
+    the rest go missing. A full page (== per_page) means "there might be
+    more"; a short page means "that was the last one"."""
+    api = _api_with_fake_request(tmp_path, monkeypatch)
+    pages = {1: [{"iid": i} for i in range(100)], 2: [{"iid": 100}]}
+    calls = []
+
+    def fake_request(method, endpoint, params=None):
+        calls.append(dict(params))
+        return pages[params["page"]]
+
+    monkeypatch.setattr(api, "_request", fake_request)
+
+    result = api.list_issues("a/b")
+
+    assert len(result) == 101
+    assert len(calls) == 2
+    assert calls[0]["per_page"] == 100
+    assert calls[1]["page"] == 2
+
+
+def test_list_issues_stops_after_short_page(tmp_path, monkeypatch):
+    api = _api_with_fake_request(tmp_path, monkeypatch)
+    calls = []
+
+    def fake_request(method, endpoint, params=None):
+        calls.append(dict(params))
+        return [{"iid": 1}, {"iid": 2}]
+
+    monkeypatch.setattr(api, "_request", fake_request)
+
+    result = api.list_issues("a/b")
+
+    assert len(result) == 2
+    assert len(calls) == 1
+
+
+def test_list_merge_requests_passes_assignee_and_author_filters(tmp_path, monkeypatch):
+    api = _api_with_fake_request(tmp_path, monkeypatch)
+    captured = {}
+
+    def fake_request(method, endpoint, params=None):
+        captured["params"] = params
+        return []
+
+    monkeypatch.setattr(api, "_request", fake_request)
+
+    api.list_merge_requests("a/b", assignee_username="encore", author_username="encore")
+
+    assert captured["params"]["assignee_username"] == "encore"
+    assert captured["params"]["author_username"] == "encore"
+
+
+def test_list_merge_requests_pages_through_all_results(tmp_path, monkeypatch):
+    api = _api_with_fake_request(tmp_path, monkeypatch)
+    pages = {1: [{"iid": i} for i in range(100)], 2: [{"iid": 100}]}
+
+    def fake_request(method, endpoint, params=None):
+        return pages[params["page"]]
+
+    monkeypatch.setattr(api, "_request", fake_request)
+
+    result = api.list_merge_requests("a/b")
+
+    assert len(result) == 101
+
+
+def test_main_list_issues_parses_assignee_and_author_flags(tmp_path, monkeypatch):
+    """The CLI's list-issues subcommand accepts --assignee=/--author= flags
+    in addition to its existing positional state/labels args, so
+    dashboard_server.py (and anyone else) can ask GitLab to filter
+    server-side instead of fetching everything and filtering client-side."""
+    monkeypatch.chdir(tmp_path)
+    _write_config(tmp_path, {"projects": {}})
+    captured = {}
+
+    class FakeGitLabAPI:
+        def __init__(self, instance_name=None, bundle_name=None):
+            self.instance_name = instance_name
+
+        def list_issues(self, project_id, state, labels, assignee_username=None, author_username=None):
+            captured["args"] = (project_id, state, labels, assignee_username, author_username)
+            return []
+
+    monkeypatch.setattr(gitlab_api, "GitLabAPI", FakeGitLabAPI)
+    monkeypatch.setattr(sys, "argv", [
+        "gitlab_api.py", "list-issues", "a/b", "opened", "--assignee=encore", "--author=encore",
+    ])
+
+    gitlab_api.main()
+
+    assert captured["args"] == ("a/b", "opened", None, "encore", "encore")
+
+
+def test_main_list_issues_still_parses_labels_alongside_flags(tmp_path, monkeypatch):
+    monkeypatch.chdir(tmp_path)
+    _write_config(tmp_path, {"projects": {}})
+    captured = {}
+
+    class FakeGitLabAPI:
+        def __init__(self, instance_name=None, bundle_name=None):
+            pass
+
+        def list_issues(self, project_id, state, labels, assignee_username=None, author_username=None):
+            captured["args"] = (project_id, state, labels, assignee_username, author_username)
+            return []
+
+    monkeypatch.setattr(gitlab_api, "GitLabAPI", FakeGitLabAPI)
+    monkeypatch.setattr(sys, "argv", [
+        "gitlab_api.py", "list-issues", "a/b", "opened", "bug", "urgent", "--assignee=encore",
+    ])
+
+    gitlab_api.main()
+
+    assert captured["args"] == ("a/b", "opened", ["bug", "urgent"], "encore", None)
+
+
+def test_main_list_mrs_parses_assignee_and_author_flags(tmp_path, monkeypatch):
+    monkeypatch.chdir(tmp_path)
+    _write_config(tmp_path, {"projects": {}})
+    captured = {}
+
+    class FakeGitLabAPI:
+        def __init__(self, instance_name=None, bundle_name=None):
+            pass
+
+        def list_merge_requests(self, project_id, state, assignee_username=None, author_username=None):
+            captured["args"] = (project_id, state, assignee_username, author_username)
+            return []
+
+    monkeypatch.setattr(gitlab_api, "GitLabAPI", FakeGitLabAPI)
+    monkeypatch.setattr(sys, "argv", [
+        "gitlab_api.py", "list-mrs", "a/b", "opened", "--author=encore",
+    ])
+
+    gitlab_api.main()
+
+    assert captured["args"] == ("a/b", "opened", None, "encore")
 
 
 def test_resolve_project_alias_returns_3tuple_for_non_alias(tmp_path, monkeypatch):
