@@ -5,7 +5,7 @@ license: MIT
 compatibility: git required. glab CLI recommended. API script is the fallback.
 metadata:
   author: encoreshao
-  version: "1.0"
+  version: "1.1"
   tags: gitlab issue summary comment engineer workflow markdown glab post-mr
 ---
 
@@ -56,7 +56,7 @@ High-level only — this is a recap, not a diff. No file-by-file listings, no li
 !<mr-number> — <merged / open, awaiting review>
 ```
 
-Omit any section that has nothing to say — don't pad it out. Keep the whole thing skimmable in under 30 seconds.
+Omit any section that has nothing to say — don't pad it out. Keep the whole thing skimmable in under 30 seconds. Never collapse this into one dense paragraph mixing what shipped with what's still open or unverified — a caveat that needs a human's action (e.g. "couldn't verify locally, needs X before merge") always gets its own heading or bold label, not a trailing clause. See `examples/companies-grid-sort-fix.md` for a real before/after.
 
 ## Post the comment
 

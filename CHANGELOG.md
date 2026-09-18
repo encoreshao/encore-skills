@@ -6,6 +6,12 @@ Versioning follows [Semantic Versioning](https://semver.org/).
 
 ## [Unreleased]
 
+### Added
+- `triage-issue` (v1.5) and `summarize-issue` (v1.1) each gained a worked before/after example (`examples/backfill-status-reply.md`, `examples/companies-grid-sort-fix.md`) showing a dense run-on paragraph reformatted into labeled sections with bullets.
+
+### Changed
+- `triage-issue` and `summarize-issue` now require any reply/summary carrying more than one fact (a status update, a fix plus a caveat, anything mixing "done" with "still open") to use markdown headers/bold labels and bullets per fact instead of one dense paragraph. Single-fact, one-line answers are unaffected.
+
 ### Fixed
 - README: Cursor and Codex install docs now use the same one-line curl install as Claude Code instead of a manual `git clone` step (the setup script already self-clones to `~/.encore-skills` on first run regardless of tool flag).
 - README: GitLab manual-setup and uninstall commands now reference `~/.encore-skills/...` instead of `~/.claude/skills/...` or a bare `./scripts/...`, since those paths only exist for Claude-only installs or a local repo checkout.

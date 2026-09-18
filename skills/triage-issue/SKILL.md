@@ -5,7 +5,7 @@ license: MIT
 compatibility: GitLab project access required. glab CLI optional. Local codebase optional — codebase analysis is skipped if none is available.
 metadata:
   author: encoreshao
-  version: "1.4"
+  version: "1.5"
   tags: gitlab issue comments reply triage mention assignee engineer cache memory
 ---
 
@@ -66,6 +66,7 @@ Don't draft from the issue text alone. For each comment needing a reply:
 - A multi-part question or a request with several asks gets a structured reply (short intro + bullets), one point per ask — no more.
 - A comment that's really a status update or FYI, not a question, may not need prose at all — a link or a single confirming line is enough.
 - Never add sections, disclaimers, or "let me know if you have questions" filler the comment didn't ask for.
+- **Any reply carrying more than one fact — a status update, a multi-part answer, anything mixing "done" with "still open" or "needs input" — always goes out as markdown with clear paragraph structure: bold labels or `###` headers plus bullets per fact, never one dense run-on paragraph.** Split it the way `examples/backfill-status-reply.md` does: what's confirmed/done under its own heading, what's still open under another, so a reader can skip straight to the part they need. This doesn't relax the one-line-answer rule above — a genuinely single-fact reply still stays one line.
 
 **Write it in the assignee's own voice — first person, like they'd actually type it, not a templated support-ticket reply.** Match their tone from their own earlier comments in the thread (direct vs. casual, how much context they usually give). Personalized doesn't mean less accurate: state what's true, cite the file/commit/behavior you actually checked in Step 3, and don't oversell or hedge past what you confirmed.
 
