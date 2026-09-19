@@ -11,6 +11,7 @@ Versioning follows [Semantic Versioning](https://semver.org/).
 
 ### Changed
 - `triage-issue` and `summarize-issue` now require any reply/summary carrying more than one fact (a status update, a fix plus a caveat, anything mixing "done" with "still open") to use markdown headers/bold labels and bullets per fact instead of one dense paragraph. Single-fact, one-line answers are unaffected.
+- `triage-issue` and `summarize-issue` now pick section headings based on outcome instead of a fixed template: a genuinely completed task still uses "What's done" / "What remains" (or `Changes`/`Verified`), but a fix that was tried and didn't work, or a real blocker, gets its own **Problem** / **Blocked on** heading instead of being filed under "remains" — so a reader isn't misled into thinking a failed attempt actually shipped.
 
 ### Fixed
 - README: Cursor and Codex install docs now use the same one-line curl install as Claude Code instead of a manual `git clone` step (the setup script already self-clones to `~/.encore-skills` on first run regardless of tool flag).

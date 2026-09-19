@@ -29,6 +29,10 @@ git log origin/<base>..<branch> --oneline             # commits that make up the
 
 If the MR is already merged, note that. If it's still open, say so instead of implying it's done.
 
+## Pick the shape based on outcome
+
+This skill assumes the issue is actually fixed — use the template below for that case. If the attempt didn't fully land (still failing, blocked on something outside your control, or you couldn't verify it), don't force it into "What's done" — that misleads a reader into thinking it shipped. Replace `## Changes`/`## Verified` with a plain `## Problem` (or `## Blocked on`) section stating what was tried, what actually failed or is blocking, and what's needed to unblock it. Same markdown/bullet discipline either way — headers and bullets per fact, never a run-on paragraph — just don't dress up a failure as a success.
+
 ## Write the summary
 
 High-level only — this is a recap, not a diff. No file-by-file listings, no line-count stats. Markdown, always:
