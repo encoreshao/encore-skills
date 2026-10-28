@@ -5,7 +5,7 @@ license: MIT
 compatibility: git required. glab CLI recommended. API script is the fallback.
 metadata:
   author: encoreshao
-  version: "1.1"
+  version: "1.2"
   tags: gitlab issue summary comment engineer workflow markdown glab post-mr
 ---
 
@@ -13,7 +13,7 @@ metadata:
 
 Use when the user asks to summarize completed work and post it to the issue — e.g. "summarize this and post it to the issue", "add a summary comment to #42". Typically comes right after `create-mr`, once the issue is fixed and the MR exists (open or merged).
 
-This is not the one-line "Fixed in !123" note `create-mr` already posts. This is a fuller, high-level recap for anyone landing on the issue later — reporter, reviewer, or future-you — who wants to know what happened without reading the diff or the whole comment thread.
+This is not the one-line "Fixed in !123" note `create-mr` already posts. This is a short, goal-based recap for anyone landing on the issue later — reporter, reviewer, or future-you — who wants to know whether the issue's goal was met without reading the diff or the whole comment thread.
 
 ## Gather context
 
@@ -31,36 +31,22 @@ If the MR is already merged, note that. If it's still open, say so instead of im
 
 ## Pick the shape based on outcome
 
-This skill assumes the issue is actually fixed — use the template below for that case. If the attempt didn't fully land (still failing, blocked on something outside your control, or you couldn't verify it), don't force it into "What's done" — that misleads a reader into thinking it shipped. Replace `## Changes`/`## Verified` with a plain `## Problem` (or `## Blocked on`) section stating what was tried, what actually failed or is blocking, and what's needed to unblock it. Same markdown/bullet discipline either way — headers and bullets per fact, never a run-on paragraph — just don't dress up a failure as a success.
+This skill assumes the issue is actually fixed — use the template below for that case. If the attempt didn't fully land (still failing, blocked on something outside your control, or you couldn't verify it), don't dress it up as delivered: replace the **Goal** line with **Blocked on:** and list what was tried, what failed, and what a human needs to do, one bullet each.
 
 ## Write the summary
 
-High-level only — this is a recap, not a diff. No file-by-file listings, no line-count stats. Markdown, always:
+Goal-based, not action-based. The issue comment answers "did we get what we asked for?"; *how* it was done — changes, files, classes, commands, branches, commits — already lives in the MR description (see `create-mr`), so don't repeat it here. Markdown, always:
 
 ```markdown
-## Summary
+**Merge request:** !<mr-number> → `<target-branch>` — <merged / open, awaiting review>
 
-<2-3 sentences: what was wrong and what changed, in plain language.>
-
-## Root cause
-
-<1-2 sentences — only if non-obvious. Skip this section if the fix was straightforward.>
-
-## Changes
-
-- <what changed, one bullet per logical change — not per file>
-- <...>
-
-## Verified
-
-- <what confirms this is actually fixed — test added, manually reproduced and checked, etc.>
-
-## MR
-
-!<mr-number> — <merged / open, awaiting review>
+**Goal:** <the outcome the issue asked for, now delivered, in one sentence from the user's view>
+- <key result or metric — what a user can now do>
+- <edge case now handled, or a number that matters: records affected, tests added, time saved>
+- Checks: <n>/<n> passed ✅ (commands in the MR)
 ```
 
-Omit any section that has nothing to say — don't pad it out. Keep the whole thing skimmable in under 30 seconds. Never collapse this into one dense paragraph mixing what shipped with what's still open or unverified — a caveat that needs a human's action (e.g. "couldn't verify locally, needs X before merge") always gets its own heading or bold label, not a trailing clause. See `examples/companies-grid-sort-fix.md` for a real before/after.
+2-4 result bullets, one fact each; skip any you'd have to pad. Readable in 10 seconds. A caveat that needs a human's action (e.g. "couldn't verify locally, needs X before merge") gets its own bold **Needs:** line, never a trailing clause on a result bullet. See `examples/companies-grid-sort-fix.md` for a real before/after.
 
 ## Post the comment
 

@@ -6,24 +6,12 @@ Issue #42 fixed, MR !87 merged (see `create-mr`'s example).
 ## Output — posted as an issue comment
 
 ```markdown
-## Summary
+**Merge request:** !87 → `main` — merged
 
-Users with uppercase characters in their email (e.g. "User@Example.com") couldn't log in
-because the auth lookup was case-sensitive. The lookup now normalizes the email to
-lowercase before querying, so any case variant matches the stored account.
-
-## Changes
-
-- Normalize the email input to lowercase in `AuthService` before the `find_by` call
-- Added a regression test covering mixed-case login
-
-## Verified
-
-- Reproduced the original failure, confirmed it's gone after the fix
-- Manually logged in with "User@Example.com" against an account stored as lowercase
-- Tests pass
-
-## MR
-
-!87 — merged
+**Goal:** users can log in no matter how they capitalize their email.
+- "User@Example.com" now signs in to an account stored as "user@example.com"
+- The original failure was reproduced first and is gone after the fix
+- Checks: 2/2 passed ✅ (commands in the MR)
 ```
+
+The `AuthService` change and the regression test are how it was done — they're in the MR description, not here.
