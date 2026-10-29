@@ -13,7 +13,7 @@ metadata:
 
 Use when the user asks to summarize completed work and post it to the issue — e.g. "summarize this and post it to the issue", "add a summary comment to #42". Typically comes right after `create-mr`, once the issue is fixed and the MR exists (open or merged).
 
-This is not the one-line "Fixed in !123" note `create-mr` already posts. This is a short, goal-based recap for anyone landing on the issue later — reporter, reviewer, or future-you — who wants to know whether the issue's goal was met without reading the diff or the whole comment thread.
+`create-mr` already posts a brief goal-based comment when the MR is opened. Use this skill for an updated recap (e.g. after merge or further changes) — a short, goal-based recap for anyone landing on the issue later — reporter, reviewer, or future-you — who wants to know whether the issue's goal was met without reading the diff or the whole comment thread.
 
 ## Gather context
 

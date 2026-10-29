@@ -69,7 +69,7 @@ Use `review-code`. Start by asking: does this actually solve the problem from th
 
 ### Phase 4: Create MR
 
-Use `create-mr`. It targets the branch you branched from (recorded in Phase 2), not always `main`. Write a description that tells reviewers what problem was solved and whether it's fixed — in plain language, not a file list.
+Use `create-mr`. It targets the branch you branched from (recorded in Phase 2), not always `main`. Write a description that tells reviewers what problem was solved and whether it's fixed — in plain language, not a file list. `create-mr` also posts a brief key-result comment on the issue; an MR isn't done until that comment exists.
 
 **Gate:** MR is open, targets the right base branch, CI is passing, description links to the issue.
 
@@ -77,7 +77,7 @@ Use `create-mr`. It targets the branch you branched from (recorded in Phase 2), 
 
 ### Optional: Summarize on the issue
 
-If the user asks for a recap on the issue itself (beyond `create-mr`'s one-line "Fixed in !123" note), use `summarize-issue`. High-level, markdown, no diff dump — written for someone who won't read the code.
+If the user asks for a recap on the issue itself (beyond the brief comment `create-mr` already posts), use `summarize-issue`. High-level, markdown, no diff dump — written for someone who won't read the code.
 
 ---
 

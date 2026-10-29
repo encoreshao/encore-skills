@@ -1,12 +1,12 @@
 ---
 name: create-mr
-description: Create a GitLab Merge Request — clear title, high-level summary of what was changed and why, explicit confirmation the issue is resolved
+description: Create a GitLab Merge Request — clear title, high-level summary of what was changed and why, explicit confirmation the issue is resolved, then a brief key-result comment on the issue
 license: MIT
 compatibility: git required. glab CLI recommended (default path). API script is the fallback.
 metadata:
   author: encoreshao
-  version: "1.8"
-  tags: gitlab mr merge-request engineer workflow ship branch related-work glab fallback
+  version: "1.9"
+  tags: gitlab mr merge-request engineer workflow ship branch related-work glab fallback issue-comment
 ---
 
 # Create MR
@@ -158,15 +158,35 @@ git push -u origin HEAD
 # Open the URL GitLab prints, paste the markdown description above
 ```
 
-## After creating
+## After creating — comment on the issue (required)
 
-Share the MR URL. Post a note on the issue:
+Creating the MR is not the last step. Every MR must be followed by a comment on its issue, on every creation path (`glab`, API script, or manual). Do this before reporting back; if you can't post it, say so plainly instead of calling the work done.
+
+The comment is a brief for someone who will never open the MR: did the issue's goal land, and what are the key numbers. A bare `Fixed in !123: <url>` is not acceptable. GitLab renders an MR URL as `!123`, so that reads `Fixed in !123: !123` and says nothing. Name the MR once, as `!<mr-number>` (GitLab links it), never both forms.
+
+```markdown
+**Merge request:** !<mr-number> → `<target-branch>` — open, awaiting review
+
+**Goal:** <the outcome the issue asked for, in one sentence from the user's view>
+- <key result or metric: what a user can now do, records affected, time before → after>
+- <edge case now handled, or tests added>
+- Checks: <n>/<n> passed ✅
+```
+
+Rules:
+- 2-4 bullets, one fact each, readable in 10 seconds. Lead with the outcome and the numbers, not the process.
+- No file names, class names, commands, or commit lists. How it was done belongs in the MR description.
+- Only claim what you verified. Unverified or blocked: replace **Goal** with **Blocked on:** and add a bold **Needs:** line for the human action.
+- A query or payload fix may carry one before → after line (e.g. `8.2s → 0.3s`), not the full statements; those stay in the MR.
+- Don't post a second comment if the issue already has one for this MR; update your own instead.
 
 ```bash
+# Via glab
+glab issue note <issue-number> --message "$NOTE"
+
 # Via API (any instance)
 GITLAB="$HOME/.claude/skills/gitlab-config/scripts/gitlab_api.py"
-python $GITLAB post-issue-comment <project> <issue_iid> "Fixed in !<mr-number>: <url>"
-
-# Via glab
-glab issue note <number> --message "Fixed in !<mr-number>. MR: <url>"
+python $GITLAB post-issue-comment <project> <issue_iid> "$NOTE"
 ```
+
+Then tell the user the MR URL and that the issue comment was posted, in one line each. For a longer recap after merge, use `summarize-issue`, which follows the same shape.
