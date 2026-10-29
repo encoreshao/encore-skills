@@ -1,5 +1,5 @@
 ---
-description: Create a GitLab Merge Request — clear title, high-level summary of what was changed and why, explicit confirmation the issue is resolved
+description: Create a GitLab Merge Request — clear title, high-level summary of what was changed and why, explicit confirmation the issue is resolved, then a brief key-result comment on the issue
 globs: []
 alwaysApply: false
 ---
