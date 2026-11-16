@@ -1,5 +1,5 @@
 ---
-name: release-mr-notes
+name: release-mr
 description: Write the description for a GitLab release MR — a casual opening line, changes grouped by feature area, every number linked to its MR, and the author @mentioned on each feature. Use when asked to write, rewrite or post release MR notes or a release summary.
 license: MIT
 compatibility: glab CLI authenticated to the GitLab instance.

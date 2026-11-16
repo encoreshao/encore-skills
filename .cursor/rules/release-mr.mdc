@@ -4,4 +4,4 @@ globs: []
 alwaysApply: false
 ---
 
-@skills/release-mr-notes/SKILL.md
+@skills/release-mr/SKILL.md
