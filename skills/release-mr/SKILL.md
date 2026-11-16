@@ -5,7 +5,7 @@ license: MIT
 compatibility: glab CLI authenticated to the GitLab instance.
 metadata:
   author: encoreshao
-  version: "1.2"
+  version: "1.3"
   tags: gitlab release mr release-notes changelog summary
 ---
 
@@ -41,14 +41,21 @@ Produce the description of a release MR: a short opening line, then features gro
 
 ## Example
 
+Full version: `examples/loopx-release.md` (project, people and links are made up).
+
 ```markdown
-This release focuses on smoother queues, a tidier dashboard, and better Japan support. The details, by area:
+This release focuses on Slack control, chat organisation, and project memory. The details, by area:
 
-### **1. Queue & Mission Control**
+### **1. Slack & Agents**
 
-* **Queue Position Display:** Queue status now reads "In line, N of M" and is live in production. The position is paired with the queue total, so it can no longer exceed it. ([#1325](https://gitlab.example.com/group/project/-/merge_requests/1325), [#1328](https://gitlab.example.com/group/project/-/merge_requests/1328)) · @benedict
+* **Slack Agent:** Mention `@LoopX` in a channel, thread or DM and it starts a loop or an ad-hoc task on your Mac, then replies in the thread with progress and the result. Setup lives in Settings, and replies are escaped so they can't ping a channel. ([#412](https://gitlab.example.com/acme/loop-x/-/merge_requests/412), [#418](https://gitlab.example.com/acme/loop-x/-/merge_requests/418)) · @mira @tomas
+* **Cursor Agent for Creator:** Generate, Showcase and Retry now run on Cursor Agent when it's your selected AI CLI, and the job log follows its output. ([#421](https://gitlab.example.com/acme/loop-x/-/merge_requests/421)) · @priya
 
-### **2. Localization**
+### **2. Chat**
 
-* **Japan Market Localization:** Japanese market names now display correctly, and firm-type labels in the Sankey chart are localized. ([#1327](https://gitlab.example.com/group/project/-/merge_requests/1327)) · @axel
+* **Chat History Folders:** File chats into folders by dragging them over or using the folder menu on each chat, and rename or delete a folder without losing its chats. ([#405](https://gitlab.example.com/acme/loop-x/-/merge_requests/405), [#409](https://gitlab.example.com/acme/loop-x/-/merge_requests/409)) · @jonas
+
+### **3. Insights & Memory**
+
+* **Project Memory Graph:** The Memory page now has a graph of projects, linked only where there is evidence, with zoom, filters and a one-page summary for each node. ([#398](https://gitlab.example.com/acme/loop-x/-/merge_requests/398)) · @priya
 ```
