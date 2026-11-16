@@ -7,7 +7,7 @@ Versioning follows [Semantic Versioning](https://semver.org/).
 ## [Unreleased]
 
 ### Added
-- `release-mr` skill — writes a GitLab release MR description: a randomly chosen casual opening line (A to H), changes grouped by feature area, every number linked to its MR, and the MR author `@mentioned` on each feature in place of a top `ccing` line.
+- `release-mr` skill — writes a GitLab release MR description: a randomly chosen casual opening line (A to H), changes grouped by feature area, every number linked to its MR, and the MR author `@mentioned` on each feature in place of a top `ccing` line. Loop X's own release MR renderer follows the same format and is kept in step by hand.
 - `triage-issue` (v1.5) and `summarize-issue` (v1.1) each gained a worked before/after example (`examples/backfill-status-reply.md`, `examples/companies-grid-sort-fix.md`) showing a dense run-on paragraph reformatted into labeled sections with bullets.
 
 ### Changed

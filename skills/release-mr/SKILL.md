@@ -5,11 +5,13 @@ license: MIT
 compatibility: glab CLI authenticated to the GitLab instance.
 metadata:
   author: encoreshao
-  version: "1.1"
+  version: "1.2"
   tags: gitlab release mr release-notes changelog summary
 ---
 
 # Release MR notes
+
+Loop X (`loop-x` repo, `crates/core/src/release_mr/render.rs`) renders its own release MR descriptions in code with the same opening lines and format rules; it does not read this skill. Change both together.
 
 Produce the description of a release MR: a short opening line, then features grouped by area, each with MR links and its author.
 
