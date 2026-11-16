@@ -57,6 +57,7 @@ If your team isn't on GitLab, the loop structure (`analyze → fix → review �
 | [`fix-issue`](skills/fix-issue/SKILL.md) | Implement following the human-thinking loop — understand, plan, code, verify the problem is actually gone. |
 | [`review-code`](skills/review-code/SKILL.md) | Pre-MR self-review — problem solved first, then security, correctness, and code quality. |
 | [`create-mr`](skills/create-mr/SKILL.md) | Create a GitLab MR with a high-level summary that tells the reviewer what matters in 30 seconds, and calls out related work already mentioned in the issue thread. |
+| [`release-mr-notes`](skills/release-mr-notes/SKILL.md) | Write a release MR description — a casual opening line, changes grouped by feature area, every number linked to its MR, and each feature's author tagged in place of a top `ccing` line. |
 | [`summarize-issue`](skills/summarize-issue/SKILL.md) | Once an issue is fixed and its MR exists, post a high-level markdown recap as an issue comment — fuller than `create-mr`'s one-line note. |
 | [`triage-issue`](skills/triage-issue/SKILL.md) | Reply to an issue's comments — check which ones need a reply, ground the reply in the actual codebase, draft it in your voice — always shown for approval before it's posted. |
 
